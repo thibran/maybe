@@ -1,0 +1,42 @@
+CREATE TABLE t (
+       _id INTEGER PRIMARY KEY,
+       dir_id INTEGER NOT NULL,
+       dt DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+INSERT INTO t (dir_id, dt) VALUES (1, '2014-09-09 14:00:00');
+INSERT INTO t (dir_id, dt) VALUES (2, '2014-03-02 09:00:00');
+INSERT INTO t (dir_id, dt) VALUES (3, '2014-01-01 20:00:00');
+INSERT INTO t (dir_id, dt) VALUES (4, '2010-11-15 11:00:00');
+INSERT INTO t (dir_id) VALUES (5);
+INSERT INTO t (dir_id, dt) VALUES (6, '2014-01-01 20:00:00');
+INSERT INTO t (dir_id, dt) VALUES (7, DATETIME('now', '-30 Minute'));
+
+SELECT
+	_id,
+	dt,
+	COUNT(dt),
+	(
+	CASE
+	WHEN dt BETWEEN DATETIME('now', '-5 Minute') AND DATETIME('now') THEN +100
+	WHEN dt BETWEEN DATETIME('now', '-1 Hour') AND DATETIME('now') THEN +50
+	WHEN dt BETWEEN DATETIME('now', '-3 Month') AND DATETIME('now') THEN +10
+	WHEN dt BETWEEN DATETIME('now', '-1 Year') AND DATETIME('now') THEN +1
+	ELSE 0
+	END
+	+ COUNT(dt) * 10
+	) AS score
+FROM t
+GROUP BY dt
+ORDER BY score DESC, dt
+;
+
+
+
+
+/*
+INSERT INTO t DEFAULT VALUES;
+SELECT DATE('now');
+SELECT DATETIME('now', '+1 Hour');
+SELECT DATETIME('now');
+*/
