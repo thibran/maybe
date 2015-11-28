@@ -23,18 +23,54 @@ ON folder BEGIN
     INSERT INTO event (folderref) VALUES (new.folderid);
 END;
 
+CREATE TRIGGER event_limit_per_folder AFTER INSERT
+ON event BEGIN
+    DELETE FROM event WHERE eventid IN (
+        SELECT eventid FROM event
+        WHERE folderref = new.folderref
+        ORDER BY time DESC LIMIT -1 OFFSET 2
+    );
+END;
+
+
 
 INSERT INTO folder (path) VALUES ("/tmp/test");
-UPDATE folder SET
-    c = (SELECT c+1 FROM folder WHERE path = "/tmp/test")
-WHERE path = "/tmp/test";
+
+INSERT INTO event (time, folderref) VALUES ("2014-09-09 14:00:00", 1);
 
 UPDATE folder SET
     c = (SELECT c+1 FROM folder WHERE path = "/tmp/test")
 WHERE path = "/tmp/test";
 
-SELECT * FROM folder;
+/*
+eventid     time                 folderref 
+----------  -------------------  ----------
+1           2015-11-28 14:43:33  1         
+2           2014-09-09 14:00:00  1         
+3           2015-11-28 14:43:33  1  
+*/
+
+
+--SELECT * FROM folder;
+-- SELECT * FROM event;
+
+/*
+SELECT * FROM event
+WHERE folderref = 1
+ORDER BY time DESC LIMIT -1 OFFSET 2;
+*/
+
+/*
+DELETE FROM event WHERE eventid IN (
+    SELECT eventid FROM event
+    WHERE folderref = 1
+    ORDER BY time DESC LIMIT -1 OFFSET 2
+);
+*/
+
 SELECT * FROM event;
+
+
 
 
 /*
