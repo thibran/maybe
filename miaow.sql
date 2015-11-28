@@ -4,6 +4,8 @@ PLAN:
         - if not nil, update and increase count (check for max INT too)
         - if nil, create new folder entry
     2. test how big the db gets with 30.000 folder entries
+    3. m -  go to previous folder
+    4. m    go to last folder if it's not the current dir
 */
 
 PRAGMA foreign_keys = ON;
