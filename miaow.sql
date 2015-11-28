@@ -1,9 +1,18 @@
+/*
+PLAN:
+    1. get folder by path with count
+        - if not nil, update and increase count (check for max INT too)
+        - if nil, create new folder entry
+*/
+
 PRAGMA foreign_keys = ON;
+--PRAGMA recursive_triggers = ON;
 
 CREATE TABLE folder (
     folderid INTEGER PRIMARY KEY,
     path TEXT UNIQUE NOT NULL,
-    c INTEGER DEFAULT 1 NOT NULL
+    c INTEGER DEFAULT 1 NOT NULL, --count
+    time DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE event(
@@ -18,57 +27,63 @@ ON folder BEGIN
     INSERT INTO event (folderref) VALUES (new.folderid);
 END;
 
-CREATE TRIGGER update_folder AFTER UPDATE
+CREATE TRIGGER folder_limit AFTER INSERT
 ON folder BEGIN
-    INSERT INTO event (folderref) VALUES (new.folderid);
-END;
-
-CREATE TRIGGER event_limit_per_folder AFTER INSERT
-ON event BEGIN
-    DELETE FROM event WHERE eventid IN (
-        SELECT eventid FROM event
-        WHERE folderref = new.folderref
+    DELETE FROM folder WHERE folderid IN (
+        SELECT folderid FROM folder
         ORDER BY time DESC LIMIT -1 OFFSET 2
     );
 END;
 
 
+CREATE TRIGGER update_folder AFTER UPDATE
+ON folder BEGIN
+    INSERT INTO event (folderref) VALUES (new.folderid);
+END;
 
-INSERT INTO folder (path) VALUES ("/tmp/test");
+-- keep 10 events per folder entry
+CREATE TRIGGER event_limit_per_folder AFTER INSERT
+ON event BEGIN
+    DELETE FROM event WHERE eventid IN (
+        SELECT eventid FROM event
+        WHERE folderref = new.folderref
+        ORDER BY time DESC LIMIT -1 OFFSET 10
+    );
+END;
 
-INSERT INTO event (time, folderref) VALUES ("2014-09-09 14:00:00", 1);
-
+/*
 UPDATE folder SET
     c = (SELECT c+1 FROM folder WHERE path = "/tmp/test")
 WHERE path = "/tmp/test";
-
-/*
-eventid     time                 folderref 
-----------  -------------------  ----------
-1           2015-11-28 14:43:33  1         
-2           2014-09-09 14:00:00  1         
-3           2015-11-28 14:43:33  1  
 */
 
 
---SELECT * FROM folder;
--- SELECT * FROM event;
+INSERT INTO folder (path) VALUES ("/tmp/test");
+INSERT INTO folder (path, time) VALUES ("/etc/apt", "2014-09-09 14:00:00");
+INSERT INTO event (time, folderref) VALUES (DATETIME("now", "-10 Minute"), 2);
+
+INSERT INTO folder (path) VALUES ("/home/tux");
+
+INSERT INTO event (time, folderref) VALUES ("2014-09-09 14:00:00", 1);
+INSERT INTO event (time, folderref) VALUES (DATETIME("now", "-30 Minute"), 1);
+
+
 
 /*
-SELECT * FROM event
-WHERE folderref = 1
+SELECT folderid FROM folder
 ORDER BY time DESC LIMIT -1 OFFSET 2;
 */
 
 /*
-DELETE FROM event WHERE eventid IN (
-    SELECT eventid FROM event
-    WHERE folderref = 1
+DELETE FROM folder WHERE folderid IN (
+    SELECT folderid FROM folder
     ORDER BY time DESC LIMIT -1 OFFSET 2
 );
 */
-
+    
+SELECT * FROM folder;
 SELECT * FROM event;
+
 
 
 
