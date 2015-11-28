@@ -3,6 +3,7 @@ PLAN:
     1. get folder by path with count
         - if not nil, update and increase count (check for max INT too)
         - if nil, create new folder entry
+    2. test how big the db gets with 30.000 folder entries
 */
 
 PRAGMA foreign_keys = ON;
@@ -11,7 +12,7 @@ PRAGMA foreign_keys = ON;
 CREATE TABLE folder (
     folderid INTEGER PRIMARY KEY,
     path TEXT UNIQUE NOT NULL,
-    c INTEGER DEFAULT 1 NOT NULL, --count
+    c INTEGER DEFAULT 1 NOT NULL --count
 );
 
 CREATE TABLE event(
@@ -26,20 +27,18 @@ ON folder BEGIN
     INSERT INTO event (folderref) VALUES (new.folderid);
 END;
 
-/*
+CREATE TRIGGER update_folder AFTER UPDATE
+ON folder BEGIN
+    INSERT INTO event (folderref) VALUES (new.folderid);
+END;
+
+-- keep 30.000 folders
 CREATE TRIGGER folder_limit AFTER INSERT
 ON folder BEGIN
     DELETE FROM folder WHERE folderid IN (
         SELECT folderid FROM folder
-        ORDER BY time DESC LIMIT -1 OFFSET 2
+        ORDER BY c DESC LIMIT -1 OFFSET 30000
     );
-END;
-*/
-
-
-CREATE TRIGGER update_folder AFTER UPDATE
-ON folder BEGIN
-    INSERT INTO event (folderref) VALUES (new.folderid);
 END;
 
 -- keep 10 events per folder entry
@@ -58,7 +57,6 @@ UPDATE folder SET
 WHERE path = "/tmp/test";
 */
 
-
 INSERT INTO folder (path, c) VALUES ("/tmp/test", 2);
 INSERT INTO folder (path, c) VALUES ("/etc/apt", 1);
 INSERT INTO event (time, folderref) VALUES (DATETIME("now", "-10 Minute"), 2);
@@ -67,29 +65,9 @@ INSERT INTO folder (path, c) VALUES ("/home/tux", 3);
 
 INSERT INTO event (time, folderref) VALUES ("2014-09-09 14:00:00", 1);
 INSERT INTO event (time, folderref) VALUES (DATETIME("now", "-30 Minute"), 1);
-
-
-
-/*
-SELECT folderid FROM folder
-ORDER BY time DESC LIMIT -1 OFFSET 2;
-*/
-
-/*
-DELETE FROM folder WHERE folderid IN (
-    SELECT folderid FROM folder
-    ORDER BY time DESC LIMIT -1 OFFSET 2
-);
-*/
-
-SELECT folderid FROM folder
-ORDER BY c DESC LIMIT -1 OFFSET 2;
     
 SELECT * FROM folder;
 SELECT * FROM event;
-
-
-
 
 
 /*
