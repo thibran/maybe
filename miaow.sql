@@ -57,7 +57,7 @@ UPDATE folder SET
 WHERE path = "/tmp/test";
 */
 
-INSERT INTO folder (path, c) VALUES ("/tmp/test", 2);
+INSERT INTO folder (path, c) VALUES ("/home/test", 2);
 INSERT INTO folder (path, c) VALUES ("/etc/apt", 1);
 INSERT INTO event (time, folderref) VALUES (DATETIME("now", "-10 Minute"), 2);
 
