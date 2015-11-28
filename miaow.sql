@@ -24,8 +24,21 @@ ON folder BEGIN
 END;
 
 
---INSERT INTO folder (path) VALUES ("/tmp/test");
+INSERT INTO folder (path) VALUES ("/tmp/test");
+UPDATE folder SET
+    c = (SELECT c+1 FROM folder WHERE path = "/tmp/test")
+WHERE path = "/tmp/test";
 
+UPDATE folder SET
+    c = (SELECT c+1 FROM folder WHERE path = "/tmp/test")
+WHERE path = "/tmp/test";
+
+SELECT * FROM folder;
+SELECT * FROM event;
+
+
+/*
+-- deletes old value before replacing -> bad
 INSERT OR REPLACE INTO folder (folderid, path, c)
 SELECT old.folderid, new.path, old.c
 FROM ( SELECT "/tmp/test" AS path
@@ -35,56 +48,5 @@ LEFT JOIN ( SELECT
     path,
     (c+1) AS c
     FROM folder WHERE path = "/tmp/test"
-) AS old ON new.path = old.path
-;
-
-SELECT * FROM folder;
-SELECT * FROM event;
-
-
-
-
-
-/*
-SELECT new.folderid, path p, count c FROM (
-    SELECT * FROM folder WHERE path = "/tmp/foo"
-) AS new
-WHERE path = "/tmp/foo";
-*/
-
-/*
-INSERT OR REPLACE INTO folder (path) VALUES (
-    
-);
-*/
-
-/*
-INSERT INTO folder (path) VALUES ("/tmp/test");
-INSERT INTO folder (path) VALUES ("/home/tux");
-
-SELECT * FROM folder;
-SELECT * FROM event WHERE folderref = 1;
-*/
-
-/*
---INSERT INTO event (folderref) VALUES (1);
---INSERT INTO event (folderref) VALUES (1);
-
-DELETE FROM folder WHERE folderid = 1;
-
-SELECT * FROM folder;
-SELECT * FROM event;
-*/
-
-/*
-INSERT OR REPLACE INTO folder (folderid, path, c)
-SELECT old.folderid, old.path, new.c
-FROM ( SELECT
-    "/tmp/test" AS path,
-    10          AS c
-) AS new
-LEFT JOIN (
-    SELECT folderid, path FROM folder
-) AS old ON new.path = old.path
-;
+) AS old ON new.path = old.path;
 */
