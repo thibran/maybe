@@ -12,7 +12,6 @@ CREATE TABLE folder (
     folderid INTEGER PRIMARY KEY,
     path TEXT UNIQUE NOT NULL,
     c INTEGER DEFAULT 1 NOT NULL, --count
-    time DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE event(
@@ -27,6 +26,7 @@ ON folder BEGIN
     INSERT INTO event (folderref) VALUES (new.folderid);
 END;
 
+/*
 CREATE TRIGGER folder_limit AFTER INSERT
 ON folder BEGIN
     DELETE FROM folder WHERE folderid IN (
@@ -34,6 +34,7 @@ ON folder BEGIN
         ORDER BY time DESC LIMIT -1 OFFSET 2
     );
 END;
+*/
 
 
 CREATE TRIGGER update_folder AFTER UPDATE
@@ -58,11 +59,11 @@ WHERE path = "/tmp/test";
 */
 
 
-INSERT INTO folder (path) VALUES ("/tmp/test");
-INSERT INTO folder (path, time) VALUES ("/etc/apt", "2014-09-09 14:00:00");
+INSERT INTO folder (path, c) VALUES ("/tmp/test", 2);
+INSERT INTO folder (path, c) VALUES ("/etc/apt", 1);
 INSERT INTO event (time, folderref) VALUES (DATETIME("now", "-10 Minute"), 2);
 
-INSERT INTO folder (path) VALUES ("/home/tux");
+INSERT INTO folder (path, c) VALUES ("/home/tux", 3);
 
 INSERT INTO event (time, folderref) VALUES ("2014-09-09 14:00:00", 1);
 INSERT INTO event (time, folderref) VALUES (DATETIME("now", "-30 Minute"), 1);
@@ -80,6 +81,9 @@ DELETE FROM folder WHERE folderid IN (
     ORDER BY time DESC LIMIT -1 OFFSET 2
 );
 */
+
+SELECT folderid FROM folder
+ORDER BY c DESC LIMIT -1 OFFSET 2;
     
 SELECT * FROM folder;
 SELECT * FROM event;
