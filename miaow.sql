@@ -39,7 +39,7 @@ CREATE TRIGGER folder_limit AFTER INSERT
 ON folder BEGIN
     DELETE FROM folder WHERE folderid IN (
         SELECT folderid FROM folder
-        ORDER BY c DESC LIMIT -1 OFFSET 30000
+        ORDER BY c DESC, folderid LIMIT -1 OFFSET 30000
     );
 END;
 
@@ -49,7 +49,7 @@ ON event BEGIN
     DELETE FROM event WHERE eventid IN (
         SELECT eventid FROM event
         WHERE folderref = new.folderref
-        ORDER BY time DESC LIMIT -1 OFFSET 10
+        ORDER BY time DESC, eventid LIMIT -1 OFFSET 10
     );
 END;
 
@@ -67,7 +67,7 @@ INSERT INTO folder (path, c) VALUES ("/home/tux", 3);
 
 INSERT INTO event (time, folderref) VALUES ("2014-09-09 14:00:00", 1);
 INSERT INTO event (time, folderref) VALUES (DATETIME("now", "-30 Minute"), 1);
-    
+
 SELECT * FROM folder;
 SELECT * FROM event;
 
