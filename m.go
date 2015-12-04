@@ -20,8 +20,8 @@ func main() {
 		os.Exit(1)
 	}
 	in := flag.Args()[0]
-	if len(in) < 3 {
-		fmt.Println("E: input too short, must be at last 3 characters long.")
+	if len(in) < 2 {
+		fmt.Println("E: input too short, must be at last 2 characters long.")
 		os.Exit(1)
 	}
 	s := newSearch(in)

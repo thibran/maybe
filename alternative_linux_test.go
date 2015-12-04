@@ -27,7 +27,20 @@ func TestPrintResult(t *testing.T) {
 	s.printResultlist()
 }
 
-// vide
+func TestFilter_keyDl(t *testing.T) {
+	search := "dl"
+	s := newSearch(search)
+	arr := s.list()
+	// arr := []string{
+	// 	"/files/src/go/src/juju-core/downloader",
+	// 	"/files/Downloads/programs/android-studio/gradle/gradle",
+	// 	"/files/Music/Soundtrack/Black Hawk down",
+	// }
+	for _, r := range s.filter(arr, 10) {
+		fmt.Printf("'%s'\n", r.v)
+	}
+}
+
 func TestFilter_keyVide(t *testing.T) {
 	search := "vide"
 	s := newSearch(search)
