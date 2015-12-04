@@ -3,3 +3,5 @@ test.db
 # KDE directories
 .directory
 
+# binary
+miaow
