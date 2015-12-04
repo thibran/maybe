@@ -16,6 +16,8 @@ type search struct {
 
 type filterFn func(p string) bool
 
+// TODO allow jumpts to e.g. /tmp
+
 func newSearch(s string) *search {
 	var filters []filterFn
 	if home := os.Getenv("HOME"); len(home) != 0 {
