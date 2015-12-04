@@ -14,7 +14,12 @@ import (
 
 func main() {
 	onlyList := flag.Bool("list", false, "list top 10 results for the keyword.")
+	printVersion := flag.Bool("version", false, "print version number.")
 	flag.Parse()
+	if *printVersion {
+		fmt.Println("version: 0.1.3")
+		os.Exit(0)
+	}
 	if len(flag.Args()) == 0 {
 		if home := os.Getenv("HOME"); len(home) != 0 {
 			fmt.Println(home)
