@@ -46,7 +46,8 @@ func (s *search) alternative() string {
 
 // list all files & folders with search key
 func (s *search) list() []string {
-	b, err := exec.Command("locate", "--basename", s.key).Output()
+	args := []string{"--limit", "250", "--basename", s.key}
+	b, err := exec.Command("locate", args...).Output()
 	if err != nil {
 		return []string{}
 	}
