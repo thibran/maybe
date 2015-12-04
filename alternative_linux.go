@@ -16,20 +16,20 @@ type search struct {
 
 type filterFn func(p string) bool
 
-// TODO allow jumpts to e.g. /tmp
-
 func newSearch(s string) *search {
 	var filters []filterFn
 	if home := os.Getenv("HOME"); len(home) != 0 {
-		homeFilter := func(p string) bool {
+		filters = append(filters, func(p string) bool {
 			return prefixFilter(home, p)
-		}
-		filters = append(filters, homeFilter)
+		})
 	}
 	filesFilter := func(p string) bool {
 		return prefixFilter("/files", p)
 	}
-	filters = append(filters, filesFilter)
+	tmpFilter := func(p string) bool {
+		return maxDepthFilter("/tmp", p, 2)
+	}
+	filters = append(filters, filesFilter, tmpFilter)
 	return &search{
 		key:     s,
 		filters: filters,
@@ -138,6 +138,14 @@ func prefixFilter(prefix, p string) bool {
 		return true
 	}
 	return false
+}
+
+func maxDepthFilter(prefix, p string, n int) bool {
+	if seq := strings.Split(p, "/"); len(seq) > n {
+		seq = seq[:n]
+		p = strings.Join(seq, "/")
+	}
+	return prefixFilter(prefix, p)
 }
 
 func shorten(p string) string {

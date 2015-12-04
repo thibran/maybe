@@ -15,6 +15,7 @@ func TestAlternative(t *testing.T) {
 		"down",
 		"download",
 		"vide",
+		"tmp",
 	}
 	for _, v := range arr {
 		s := newSearch(v)
@@ -153,6 +154,13 @@ func TestIsDir(t *testing.T) {
 func TestIsDir_negative(t *testing.T) {
 	in := "/files/Desktop/ai_brainstrom.txt"
 	if isDir(in) {
+		t.Fail()
+	}
+}
+
+func TestMaxDepthFilter(t *testing.T) {
+	in := "/usr/share/android"
+	if !maxDepthFilter("/usr", in, 2) {
 		t.Fail()
 	}
 }
