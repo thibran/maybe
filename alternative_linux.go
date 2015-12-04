@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"os/user"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -16,20 +17,22 @@ type search struct {
 
 type filterFn func(p string) bool
 
-// TODO allow jumpts to e.g. /tmp
+// TODO check current directory too?
 
-func newSearch(s string) *search {
+func newSearch(s string, whitelist []string) *search {
 	var filters []filterFn
-	if home := os.Getenv("HOME"); len(home) != 0 {
-		homeFilter := func(p string) bool {
-			return prefixFilter(home, p)
-		}
-		filters = append(filters, homeFilter)
+	if u, err := user.Current(); err == nil {
+		filters = append(filters, func(p string) bool {
+			return prefixFilter(u.HomeDir, p, whitelist)
+		})
 	}
 	filesFilter := func(p string) bool {
-		return prefixFilter("/files", p)
+		return prefixFilter("/files", p, whitelist)
 	}
-	filters = append(filters, filesFilter)
+	tmpFilter := func(p string) bool {
+		return maxDepthFilter("/tmp", p, 2, whitelist)
+	}
+	filters = append(filters, filesFilter, tmpFilter)
 	return &search{
 		key:     s,
 		filters: filters,
@@ -48,8 +51,7 @@ func (s *search) alternative() string {
 
 // list all files & folders with search key
 func (s *search) list() []string {
-	args := []string{"--limit", "800", "--basename", s.key}
-	//args := []string{"--limit", "250", "--basename", s.key}
+	args := []string{"--ignore-case", "--limit", "800", "--basename", s.key}
 	b, err := exec.Command("locate", args...).Output()
 	if err != nil {
 		return []string{}
@@ -61,47 +63,50 @@ func (s *search) list() []string {
 
 // filter returns the n best result paths filterd by filterFn.
 // Short path are prefered over long paths.
-func (s *search) filter(paths []string, n int) entries {
-	set := newEntrySet()
+func (s *search) filter(paths []string, n int) []string {
+	set := make(stringSet)
 	for _, p := range paths {
 		for _, filter := range s.filters {
 			s.maybeAdd(set, filter, p)
 		}
 	}
-	result := set.items()
-	sort.Sort(result)
-	if len(result) > n {
-		result = result[:n]
+	e := &entries{
+		search: s.key,
+		arr:    set.items(),
 	}
-	return result
+	sort.Sort(e)
+	if len(e.arr) > n {
+		e.arr = e.arr[:n]
+	}
+	return e.arr
 }
 
-func (s *search) maybeAdd(set *entrySet, filter filterFn, p string) {
+func (s *search) maybeAdd(set stringSet, filter filterFn, p string) {
 	if filter(p) {
-		set.append(entry{v: p, search: s.key})
+		set.append(p)
 	} else if r := s.inPathSegment(p); len(r) > 0 {
 		if filter(r) {
-			set.append(entry{v: r, search: s.key})
+			set.append(r)
 		}
 	}
 }
 
 func (s *search) printResultlist() {
-	entries := s.list()
+	in := s.list()
 	var arr []string
-	for _, r := range s.filter(entries, 15) {
-		if isDir(r.v) {
-			arr = append(arr, r.v)
+	for _, row := range s.filter(in, 15) {
+		if isDir(row) {
+			arr = append(arr, row)
 		}
 	}
 	fmt.Println(strings.Join(arr, "\n"))
 }
 
 // selectBest returns the first directory entry.
-func (s *search) selectBest(arr entries) string {
-	for _, r := range arr {
-		if isDir(r.v) {
-			return r.v
+func (s *search) selectBest(arr []string) string {
+	for _, row := range arr {
+		if isDir(row) {
+			return row
 		}
 	}
 	return ""
@@ -127,17 +132,35 @@ func (s *search) inPathSegment(p string) string {
 	return ""
 }
 
-func prefixFilter(prefix, p string) bool {
-	if strings.HasPrefix(p, prefix) {
-		if hiddenFolderInPath(p) {
-			return false
-		}
-		if looksLikeAFile(p) {
-			return false
-		}
-		return true
+// prefixFilter returns true if the passed path p starts with the prefix pre
+// or is in the whitelist arr.
+func prefixFilter(pre, p string, arr []string) bool {
+	if !strings.HasPrefix(p, pre) {
+		return false
 	}
-	return false
+	// check whitelist of folders
+	for _, v := range arr {
+		if p == v {
+			return true
+		}
+	}
+	if hiddenFolderInPath(p) {
+		return false
+	}
+	if looksLikeAFile(p) {
+		return false
+	}
+	return true
+
+}
+
+// maxDepthFilter takes a prefix and path string.
+func maxDepthFilter(prefix, p string, n int, arr []string) bool {
+	if seq := strings.Split(p, "/"); len(seq) > n {
+		seq = seq[:n]
+		p = strings.Join(seq, "/")
+	}
+	return prefixFilter(prefix, p, arr)
 }
 
 func shorten(p string) string {
@@ -171,57 +194,46 @@ func isDir(p string) bool {
 	return s.IsDir()
 }
 
-// entrySet set of strings.
-type entrySet struct {
-	m map[entry]struct{}
-}
+// stringSet set of entry items.
+type stringSet map[string]struct{}
 
-type entry struct {
-	v      string
+type entries struct {
+	arr    []string
 	search string
 }
 
-type entries []entry
-
 func (r entries) Len() int {
-	return len(r)
+	return len(r.arr)
 }
+
 func (r entries) Swap(i, j int) {
-	r[i], r[j] = r[j], r[i]
+	r.arr[i], r.arr[j] = r.arr[j], r.arr[i]
 }
 
 func (r entries) Less(i, j int) bool {
-	a := filepath.Base(r[i].v)
-	b := filepath.Base(r[j].v)
-	key := strings.ToLower(r[i].search)
+	key := strings.ToLower(r.search)
+	a := filepath.Base(r.arr[i])
+	b := filepath.Base(r.arr[j])
 	a = strings.ToLower(a)
 	b = strings.ToLower(b)
 	prefixA := strings.HasPrefix(a, key)
 	prefixB := strings.HasPrefix(b, key)
-	// aName := shorten(r[i].v)
-	// bName := shorten(r[j].v)
 	if prefixA && prefixB {
-		return len(r[i].v) < len(r[j].v)
+		return len(r.arr[i]) < len(r.arr[j])
 	}
 	return prefixA
 }
 
-func newEntrySet() *entrySet {
-	return &entrySet{
-		m: make(map[entry]struct{}),
-	}
-}
-
-func (s *entrySet) append(arr ...entry) {
+func (s stringSet) append(arr ...string) {
 	for _, v := range arr {
-		s.m[v] = struct{}{}
+		s[v] = struct{}{}
 	}
 }
 
-func (s *entrySet) items() entries {
-	arr := make(entries, len(s.m))
+func (s stringSet) items() []string {
+	arr := make([]string, len(s))
 	var i = 0
-	for k := range s.m {
+	for k := range s {
 		arr[i] = k
 		i++
 	}
