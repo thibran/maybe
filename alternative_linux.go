@@ -59,15 +59,9 @@ func (s *search) list() []string {
 // Short path are prefered over long paths.
 func (s *search) filter(paths []string, n int) entries {
 	set := newEntrySet()
-	for _, v := range paths {
-		for _, taker := range s.filters {
-			if taker(v) {
-				set.append(entry{v: v, search: s.key})
-				// append if path segment starts with searched keyword
-				if r := s.inPathSegment(v); len(r) > 0 {
-					set.append(entry{v: r, search: s.key})
-				}
-			}
+	for _, p := range paths {
+		for _, filter := range s.filters {
+			s.maybeAdd(set, filter, p)
 		}
 	}
 	result := set.items()
@@ -76,6 +70,16 @@ func (s *search) filter(paths []string, n int) entries {
 		result = result[:n]
 	}
 	return result
+}
+
+func (s *search) maybeAdd(set *entrySet, filter filterFn, p string) {
+	if filter(p) {
+		set.append(entry{v: p, search: s.key})
+	} else if r := s.inPathSegment(p); len(r) > 0 {
+		if filter(r) {
+			set.append(entry{v: r, search: s.key})
+		}
+	}
 }
 
 func (s *search) printResultlist() {
@@ -132,36 +136,6 @@ func prefixFilter(prefix, p string) bool {
 	return false
 }
 
-type entry struct {
-	v      string
-	search string
-}
-
-type entries []entry
-
-func (r entries) Len() int {
-	return len(r)
-}
-func (r entries) Swap(i, j int) {
-	r[i], r[j] = r[j], r[i]
-}
-
-func (r entries) Less(i, j int) bool {
-	a := filepath.Base(r[i].v)
-	b := filepath.Base(r[j].v)
-	key := strings.ToLower(r[i].search)
-	a = strings.ToLower(a)
-	b = strings.ToLower(b)
-	prefixA := strings.HasPrefix(a, key)
-	prefixB := strings.HasPrefix(b, key)
-	// aName := shorten(r[i].v)
-	// bName := shorten(r[j].v)
-	if prefixA && prefixB {
-		return len(r[i].v) < len(r[j].v)
-	}
-	return prefixA
-}
-
 func shorten(p string) string {
 	s := strings.Split(p, "/")
 	return strings.Join(s[len(s)-2:], "/")
@@ -196,6 +170,36 @@ func isDir(p string) bool {
 // entrySet set of strings.
 type entrySet struct {
 	m map[entry]struct{}
+}
+
+type entry struct {
+	v      string
+	search string
+}
+
+type entries []entry
+
+func (r entries) Len() int {
+	return len(r)
+}
+func (r entries) Swap(i, j int) {
+	r[i], r[j] = r[j], r[i]
+}
+
+func (r entries) Less(i, j int) bool {
+	a := filepath.Base(r[i].v)
+	b := filepath.Base(r[j].v)
+	key := strings.ToLower(r[i].search)
+	a = strings.ToLower(a)
+	b = strings.ToLower(b)
+	prefixA := strings.HasPrefix(a, key)
+	prefixB := strings.HasPrefix(b, key)
+	// aName := shorten(r[i].v)
+	// bName := shorten(r[j].v)
+	if prefixA && prefixB {
+		return len(r[i].v) < len(r[j].v)
+	}
+	return prefixA
 }
 
 func newEntrySet() *entrySet {

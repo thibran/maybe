@@ -33,6 +33,7 @@ func TestAlternative(t *testing.T) {
 		"table",
 		"Soundtrack",
 		"down",
+		"download",
 	}
 	for _, v := range arr {
 		s := newSearch(v)
@@ -43,6 +44,21 @@ func TestAlternative(t *testing.T) {
 func TestPrintResult(t *testing.T) {
 	s := newSearch("down")
 	s.printResultlist()
+}
+
+func TestFilter_keyDownload(t *testing.T) {
+	search := "download"
+	s := newSearch(search)
+	arr := s.list()
+	// arr := []string{
+	// 	"/files/src/go/src/juju-core/downloader",
+	// 	"/files/Downloads/programs/android-studio/gradle/gradle",
+	// 	"/files/Music/Soundtrack/Black Hawk down",
+	// }
+	for _, r := range s.filter(arr, 10) {
+		fmt.Printf("'%s'\n", r.v)
+		//fmt.Println(r.v)
+	}
 }
 
 func TestFilter_keyDown(t *testing.T) {
