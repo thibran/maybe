@@ -16,8 +16,13 @@ func main() {
 	onlyList := flag.Bool("list", false, "list top 10 results for the keyword.")
 	flag.Parse()
 	if len(flag.Args()) == 0 {
-		fmt.Println("E: no args specified!")
-		os.Exit(1)
+		if home := os.Getenv("HOME"); len(home) != 0 {
+			fmt.Println(home)
+			os.Exit(0)
+		} else {
+			//fmt.Println("E: no args specified!")
+			os.Exit(1)
+		}
 	}
 	in := flag.Args()[0]
 	if len(in) < 2 {
