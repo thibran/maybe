@@ -16,6 +16,9 @@ type search struct {
 
 type filterFn func(p string) bool
 
+// TODO whitelist folders
+// TODO check current directory too
+
 func newSearch(s string) *search {
 	var filters []filterFn
 	if home := os.Getenv("HOME"); len(home) != 0 {
