@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"os/user"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -18,15 +19,11 @@ type filterFn func(p string) bool
 
 // TODO check current directory too?
 
-func newSearch(s string) *search {
-	whitelist := []string{
-		"/home/tux/.bin",
-		"/home/tux/.dotfiles",
-	}
+func newSearch(s string, whitelist []string) *search {
 	var filters []filterFn
-	if home := os.Getenv("HOME"); len(home) != 0 {
+	if u, err := user.Current(); err == nil {
 		filters = append(filters, func(p string) bool {
-			return prefixFilter(home, p, whitelist)
+			return prefixFilter(u.HomeDir, p, whitelist)
 		})
 	}
 	filesFilter := func(p string) bool {

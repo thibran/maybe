@@ -6,6 +6,14 @@ import (
 	"testing"
 )
 
+func newTestSearch(key string) *search {
+	whitelist := []string{
+		"/home/tux/.bin",
+		"/home/tux/.dotfiles",
+	}
+	return newSearch(key, whitelist)
+}
+
 func TestAlternative(t *testing.T) {
 	arr := []string{
 		"Downl",
@@ -18,19 +26,19 @@ func TestAlternative(t *testing.T) {
 		"tmp",
 	}
 	for _, v := range arr {
-		s := newSearch(v)
+		s := newTestSearch(v)
 		fmt.Printf("%s:\t%s\n", v, s.alternative())
 	}
 }
 
 func TestPrintResult(t *testing.T) {
-	s := newSearch("down")
+	s := newTestSearch("down")
 	s.printResultlist()
 }
 
 func TestFilter_keyDl(t *testing.T) {
 	search := "dl"
-	s := newSearch(search)
+	s := newTestSearch(search)
 	arr := s.list()
 	// arr := []string{
 	// 	"/files/src/go/src/juju-core/downloader",
@@ -44,7 +52,7 @@ func TestFilter_keyDl(t *testing.T) {
 
 func TestFilter_keyVide(t *testing.T) {
 	search := "vide"
-	s := newSearch(search)
+	s := newTestSearch(search)
 	arr := s.list()
 	// arr := []string{
 	// 	"/files/src/go/src/juju-core/downloader",
@@ -58,7 +66,7 @@ func TestFilter_keyVide(t *testing.T) {
 
 func TestFilter_keyDownload(t *testing.T) {
 	search := "download"
-	s := newSearch(search)
+	s := newTestSearch(search)
 	arr := s.list()
 	for _, row := range s.filter(arr, 10) {
 		fmt.Printf("'%s'\n", row)
@@ -67,7 +75,7 @@ func TestFilter_keyDownload(t *testing.T) {
 
 func TestFilter_keyDown(t *testing.T) {
 	search := "down"
-	s := newSearch(search)
+	s := newTestSearch(search)
 	arr := []string{
 		"/files/src/go/src/juju-core/downloader",
 		"/files/Downloads/programs/android-studio/gradle/gradle",
