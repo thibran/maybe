@@ -65,7 +65,7 @@ func (s *search) list() []string {
 // filter returns the n best result paths filterd by filterFn.
 // Short path are prefered over long paths.
 func (s *search) filter(paths []string, n int) entries {
-	set := newEntrySet()
+	set := make(entrySet)
 	for _, p := range paths {
 		for _, filter := range s.filters {
 			s.maybeAdd(set, filter, p)
@@ -79,7 +79,7 @@ func (s *search) filter(paths []string, n int) entries {
 	return result
 }
 
-func (s *search) maybeAdd(set *entrySet, filter filterFn, p string) {
+func (s *search) maybeAdd(set entrySet, filter filterFn, p string) {
 	if filter(p) {
 		set.append(entry{v: p, search: s.key})
 	} else if r := s.inPathSegment(p); len(r) > 0 {
@@ -182,10 +182,8 @@ func isDir(p string) bool {
 	return s.IsDir()
 }
 
-// entrySet set of strings.
-type entrySet struct {
-	m map[entry]struct{}
-}
+// entrySet set of entry items.
+type entrySet map[entry]struct{}
 
 type entry struct {
 	v      string
@@ -217,22 +215,16 @@ func (r entries) Less(i, j int) bool {
 	return prefixA
 }
 
-func newEntrySet() *entrySet {
-	return &entrySet{
-		m: make(map[entry]struct{}),
-	}
-}
-
-func (s *entrySet) append(arr ...entry) {
+func (s entrySet) append(arr ...entry) {
 	for _, v := range arr {
-		s.m[v] = struct{}{}
+		s[v] = struct{}{}
 	}
 }
 
-func (s *entrySet) items() entries {
-	arr := make(entries, len(s.m))
+func (s entrySet) items() entries {
+	arr := make(entries, len(s))
 	var i = 0
-	for k := range s.m {
+	for k := range s {
 		arr[i] = k
 		i++
 	}
