@@ -16,21 +16,24 @@ type search struct {
 
 type filterFn func(p string) bool
 
-// TODO whitelist folders
-// TODO check current directory too
+// TODO check current directory too?
 
 func newSearch(s string) *search {
+	whitelist := []string{
+		"/home/tux/.bin",
+		"/home/tux/.dotfiles",
+	}
 	var filters []filterFn
 	if home := os.Getenv("HOME"); len(home) != 0 {
 		filters = append(filters, func(p string) bool {
-			return prefixFilter(home, p)
+			return prefixFilter(home, p, whitelist)
 		})
 	}
 	filesFilter := func(p string) bool {
-		return prefixFilter("/files", p)
+		return prefixFilter("/files", p, whitelist)
 	}
 	tmpFilter := func(p string) bool {
-		return maxDepthFilter("/tmp", p, 2)
+		return maxDepthFilter("/tmp", p, 2, whitelist)
 	}
 	filters = append(filters, filesFilter, tmpFilter)
 	return &search{
@@ -132,27 +135,35 @@ func (s *search) inPathSegment(p string) string {
 	return ""
 }
 
-// prefixFilter takes a prefix and path string.
-func prefixFilter(prefix, p string) bool {
-	if strings.HasPrefix(p, prefix) {
-		if hiddenFolderInPath(p) {
-			return false
-		}
-		if looksLikeAFile(p) {
-			return false
-		}
-		return true
+// prefixFilter returns true if the passed path p starts with the prefix pre
+// or is in the whitelist arr.
+func prefixFilter(pre, p string, arr []string) bool {
+	if !strings.HasPrefix(p, pre) {
+		return false
 	}
-	return false
+	// check whitelist of folders
+	for _, v := range arr {
+		if p == v {
+			return true
+		}
+	}
+	if hiddenFolderInPath(p) {
+		return false
+	}
+	if looksLikeAFile(p) {
+		return false
+	}
+	return true
+
 }
 
 // maxDepthFilter takes a prefix and path string.
-func maxDepthFilter(prefix, p string, n int) bool {
+func maxDepthFilter(prefix, p string, n int, arr []string) bool {
 	if seq := strings.Split(p, "/"); len(seq) > n {
 		seq = seq[:n]
 		p = strings.Join(seq, "/")
 	}
-	return prefixFilter(prefix, p)
+	return prefixFilter(prefix, p, arr)
 }
 
 func shorten(p string) string {

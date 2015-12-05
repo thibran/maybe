@@ -94,6 +94,22 @@ func TestSort_keyTable(t *testing.T) {
 	}
 }
 
+func TestPrefixFilter(t *testing.T) {
+	prefix := "/home/tux"
+	p := "/home/tux/.bin"
+	if !prefixFilter(prefix, p, []string{"/home/tux/.bin"}) {
+		t.Fail()
+	}
+}
+
+func TestPrefixFilter_negative(t *testing.T) {
+	prefix := "/home/tux"
+	p := "/home/tux/.bin"
+	if prefixFilter(prefix, p, []string{"/home/tux/.bin/old"}) {
+		t.Fail()
+	}
+}
+
 func TestInPathSegment(t *testing.T) {
 	s := new(search)
 	s.key = "down"
@@ -161,7 +177,7 @@ func TestIsDir_negative(t *testing.T) {
 
 func TestMaxDepthFilter(t *testing.T) {
 	in := "/usr/share/android"
-	if !maxDepthFilter("/usr", in, 2) {
+	if !maxDepthFilter("/usr", in, 2, nil) {
 		t.Fail()
 	}
 }

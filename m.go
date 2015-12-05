@@ -17,7 +17,7 @@ func main() {
 	printVersion := flag.Bool("version", false, "print version number.")
 	flag.Parse()
 	if *printVersion {
-		fmt.Println("version: 0.1.4")
+		fmt.Println("version: 0.1.6")
 		os.Exit(0)
 	}
 	if len(flag.Args()) == 0 {
