@@ -43,19 +43,3 @@ func TestAdd_updateExisting(t *testing.T) {
 		t.Fail()
 	}
 }
-
-// func TestSortTimes(t *testing.T) {
-// 	a := Times{f1.Times[0], f2.Times[0], f3.Times[0]}
-// 	for _, v := range a {
-// 		fmt.Println(v)
-// 	}
-// 	fmt.Println("---------------")
-// 	sort.Sort(a)
-//
-// 	if len(a) > MAX_TIMES_VALUES {
-// 		a = a[:MAX_TIMES_VALUES]
-// 	}
-// 	for _, v := range a {
-// 		fmt.Println(v)
-// 	}
-// }
