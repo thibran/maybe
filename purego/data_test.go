@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"sort"
 	"testing"
 	"time"
 )
@@ -17,43 +18,43 @@ func TestSort(t *testing.T) {
 	}
 }
 
-func TestCompare_equals(t *testing.T) {
-	s := "foo"
-	f1 := &Folder{
-		Path:  "/home/foo",
-		Count: 1,
-		Times: Times{
-			time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC),
-		}}
-	f2 := &Folder{
-		Path:  "/home/foo",
-		Count: 1,
-		Times: Times{
-			time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC),
-		}}
-	if f1.Compare(s, f2) != f1 {
-		t.Fail()
-	}
-}
+// func TestCompare_equals(t *testing.T) {
+// 	s := "foo"
+// 	f1 := &Folder{
+// 		Path:  "/home/foo",
+// 		Count: 1,
+// 		Times: Times{
+// 			time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC),
+// 		}}
+// 	f2 := &Folder{
+// 		Path:  "/home/foo",
+// 		Count: 1,
+// 		Times: Times{
+// 			time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC),
+// 		}}
+// 	if f1.Compare(s, f2) != f1 {
+// 		t.Fail()
+// 	}
+// }
 
-func TestCompare_directMatch(t *testing.T) {
-	s := "foo"
-	f1 := &Folder{
-		Path:  "/home/foo",
-		Count: 1,
-		Times: Times{
-			time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC),
-		}}
-	f2 := &Folder{
-		Path:  "/home/nfoo",
-		Count: 1,
-		Times: Times{
-			time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC),
-		}}
-	if f1.Compare(s, f2) != f1 {
-		t.Fail()
-	}
-}
+// func TestCompare_directMatch(t *testing.T) {
+// 	s := "foo"
+// 	f1 := &Folder{
+// 		Path:  "/home/foo",
+// 		Count: 1,
+// 		Times: Times{
+// 			time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC),
+// 		}}
+// 	f2 := &Folder{
+// 		Path:  "/home/nfoo",
+// 		Count: 1,
+// 		Times: Times{
+// 			time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC),
+// 		}}
+// 	if f1.Compare(s, f2) != f1 {
+// 		t.Fail()
+// 	}
+// }
 
 func TestCheckBaseSimilarity_quals(t *testing.T) {
 	base := "foo"
@@ -298,4 +299,46 @@ func TestRate_foo(t *testing.T) {
 	// 	t.Fail()
 	// }
 	fmt.Println(n)
+}
+
+func nowTimeRepo() *RepoDummy {
+	now := time.Now()
+	f1 := Folder{
+		Path:  "/home/nfoo",
+		Count: 1,
+		Times: Times{now.Add(-time.Second * 40)},
+	}
+	f2 := Folder{
+		Path:  "/home/foo",
+		Count: 1,
+		Times: Times{now.Add(-time.Hour * 18)},
+	}
+	f3 := Folder{
+		Path:  "/etc/apt",
+		Count: 1,
+		Times: Times{now.Add(-time.Hour * 24 * 7 * 2)},
+	}
+	return &RepoDummy{m: map[string]Folder{
+		f1.Path: f1,
+		f2.Path: f2,
+		f3.Path: f3,
+	}}
+}
+
+func TestBar(t *testing.T) {
+	s := "foo"
+	r := nowTimeRepo()
+	var a RatedFolders
+	for _, f := range r.All() {
+		rf := NewRatedFolder(f, s)
+		if rf.Points == NoMatch {
+			continue
+		}
+		//fmt.Println("append:", rf.Folder, " points:", rf.Points)
+		a = append(a, rf)
+	}
+	fmt.Println(a)
+	fmt.Println("-----------------------------------------------")
+	sort.Sort(a)
+	fmt.Println(a)
 }

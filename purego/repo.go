@@ -38,11 +38,11 @@ type RepoDummy struct {
 
 // NewRepoDummy creates an in-memory repo containing dummy values.
 func NewRepoDummy() *RepoDummy {
-	m := make(map[string]Folder)
-	m[f1.Path] = f1
-	m[f2.Path] = f2
-	m[f3.Path] = f3
-	return &RepoDummy{m: m}
+	return &RepoDummy{m: map[string]Folder{
+		f1.Path: f1,
+		f2.Path: f2,
+		f3.Path: f3,
+	}}
 }
 
 // All returns all folder entries of the repo.
