@@ -53,6 +53,7 @@ func (f *Folder) Compare(s string, other *Folder) *Folder {
 const (
 	StrEquals          = 100
 	StrEqualsWrongCase = 80
+	StrStartsEndsWith  = 50
 	StrContains        = 40
 	StrSimilar         = 20
 	NoMatch            = 0
@@ -86,6 +87,10 @@ func checkBaseSimilarity(base, s string) int {
 	// equals wrong case
 	if base == s {
 		return StrEqualsWrongCase
+	}
+	// starts or ends with
+	if strings.HasPrefix(base, s) || strings.HasSuffix(base, s) {
+		return StrStartsEndsWith
 	}
 	// does base even contain s?
 	if strings.Contains(base, s) {

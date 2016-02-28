@@ -84,8 +84,28 @@ func TestCheckBaseSimilarity_noMatch(t *testing.T) {
 	//fmt.Println(n)
 }
 
+func TestCheckBaseSimilarity_startsWith(t *testing.T) {
+	base := "foobar"
+	s := "foo"
+	n := checkBaseSimilarity(base, s)
+	if n != StrStartsEndsWith {
+		t.Fail()
+	}
+	//fmt.Println(n)
+}
+
+func TestCheckBaseSimilarity_endsWith(t *testing.T) {
+	base := "superfoo"
+	s := "foo"
+	n := checkBaseSimilarity(base, s)
+	if n != StrStartsEndsWith {
+		t.Fail()
+	}
+	//fmt.Println(n)
+}
+
 func TestCheckBaseSimilarity_contains(t *testing.T) {
-	base := "nfoo"
+	base := "nfooD"
 	s := "foo"
 	n := checkBaseSimilarity(base, s)
 	if n != StrContains {
