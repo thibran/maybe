@@ -51,9 +51,24 @@ func (f *Folder) Compare(s string, other *Folder) *Folder {
 }
 
 const (
+	TimeLessThanMinute      = 20
+	TimeLessThanFiveMinutes = 19
+	TimeLessThanHour        = 18
+	TimeLessThanSixHours    = 17
+	TimeLessThanTwelveHours = 16
+	TimeLessThanDay         = 15
+	TimeLessThanTwoDays     = 14
+	TimeLessThanWeek        = 13
+	TimeLessThanTwoWeeks    = 12
+	TimeLessThanMonth       = 11
+	TimeLessThanTwoMonths   = 10
+	TimeLessThanSixMonths   = 9
+	TimeLessThanYear        = 8
+	TimeOlderThanAYear      = 7
+
 	StrEquals          = 100
 	StrEqualsWrongCase = 80
-	StrStartsEndsWith  = 50
+	StrStartsEndsWith  = 60
 	StrContains        = 40
 	StrSimilar         = 20
 	NoMatch            = 0
@@ -63,6 +78,11 @@ func (f *Folder) rate(s string) int {
 	base := path.Base(f.Path)
 	var n int
 	n += checkBaseSimilarity(base, s)
+	if n == NoMatch {
+		return n
+	}
+	n += ratePassedTime(f.Times)
+
 	// if base == s {
 	// 	n += StrEquals
 	// }
@@ -70,9 +90,69 @@ func (f *Folder) rate(s string) int {
 }
 
 // TODO rate time passed since
-func ratePassedTime(t1 Times) int {
+func ratePassedTime(a Times) int {
+	var n int
+	now := time.Now()
+	for _, t := range a {
+		n += rateTime(now, t)
+	}
+	return n
+}
 
-	return 0
+func rateTime(now, t time.Time) int {
+	// < minute
+	if now.Before(t.Add(time.Minute)) {
+		return TimeLessThanMinute
+	}
+	// < 5 min
+	if now.Before(t.Add(time.Minute * 5)) {
+		return TimeLessThanFiveMinutes
+	}
+	// < hour
+	if now.Before(t.Add(time.Hour)) {
+		return TimeLessThanHour
+	}
+	// < 6 hours
+	if now.Before(t.Add(time.Hour * 6)) {
+		return TimeLessThanSixHours
+	}
+	// < 12 hours
+	if now.Before(t.Add(time.Hour * 12)) {
+		return TimeLessThanTwelveHours
+	}
+	// < day
+	if now.Before(t.Add(time.Hour * 24)) {
+		return TimeLessThanDay
+	}
+	// < 2 days
+	if now.Before(t.Add(time.Hour * 48)) {
+		return TimeLessThanTwoDays
+	}
+	// < week
+	if now.Before(t.Add(time.Hour * 24 * 7)) {
+		return TimeLessThanWeek
+	}
+	// < 2 weeks
+	if now.Before(t.Add(time.Hour * 24 * 7 * 2)) {
+		return TimeLessThanTwoWeeks
+	}
+	// < month
+	if now.Before(t.Add(time.Hour * 24 * 7 * 4)) {
+		return TimeLessThanMonth
+	}
+	// < 2 months
+	if now.Before(t.Add(time.Hour * 24 * 7 * 4 * 2)) {
+		return TimeLessThanTwoMonths
+	}
+	// < 6 months
+	if now.Before(t.Add(time.Hour * 24 * 7 * 4 * 6)) {
+		return TimeLessThanSixMonths
+	}
+	// < year
+	if now.Before(t.Add(time.Hour * 24 * 7 * 4 * 12)) {
+		return TimeLessThanYear
+	}
+	return TimeOlderThanAYear
 }
 
 // TODO write startWith endWith checks
