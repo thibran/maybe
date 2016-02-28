@@ -43,12 +43,38 @@ type Folder struct {
 	Times Times // last MaxTimesEntries updates
 }
 
-// Compare folder with another folder object.
-func (f *Folder) Compare(s string, other *Folder) *Folder {
-	if f.rate(s) >= other.rate(s) {
-		return f
+type RatedFolder struct {
+	Points int
+	Folder Folder
+}
+
+func NewRatedFolder(f Folder, s string) RatedFolder {
+	return RatedFolder{
+		Points: f.rate(s),
+		Folder: f,
 	}
-	return other
+}
+
+type RatedFolders []RatedFolder
+
+func (a RatedFolders) String() string {
+	arr := make([]string, len(a))
+	for k, v := range a {
+		arr[k] = fmt.Sprintf("%v  points: %v", v.Folder, v.Points)
+	}
+	return strings.Join(arr, "\n")
+}
+
+func (a RatedFolders) Len() int {
+	return len(a)
+}
+
+func (a RatedFolders) Less(i, j int) bool {
+	return a[i].Points > a[j].Points
+}
+
+func (a RatedFolders) Swap(i, j int) {
+	a[i], a[j] = a[j], a[i]
 }
 
 const (
@@ -78,18 +104,15 @@ const (
 func (f *Folder) rate(s string) int {
 	base := path.Base(f.Path)
 	var n int
-	n += checkBaseSimilarity(base, s)
-	fmt.Println("s:", n)
+	n += rateKeySimilarity(base, s)
+	//fmt.Println("s:", n)
+	// no string match -> return
 	if n == NoMatch {
 		return n
 	}
 	timeRate := ratePassedTime(f.Times)
 	n += timeRate
-	fmt.Println("t:", timeRate)
-
-	// if base == s {
-	// 	n += StrEquals
-	// }
+	//fmt.Println("t:", timeRate)
 	return n
 }
 
@@ -161,7 +184,7 @@ func rateTime(now, t time.Time) int {
 
 // TODO write startWith endWith checks
 // if len(s) is combined in word -> StrContains
-func checkBaseSimilarity(base, s string) int {
+func rateKeySimilarity(base, s string) int {
 	// equals
 	if base == s {
 		return StrEquals
