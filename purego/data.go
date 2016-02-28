@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"path"
 	"sort"
 	"strings"
@@ -51,20 +52,20 @@ func (f *Folder) Compare(s string, other *Folder) *Folder {
 }
 
 const (
-	TimeLessThanMinute      = 20
-	TimeLessThanFiveMinutes = 19
-	TimeLessThanHour        = 18
-	TimeLessThanSixHours    = 17
-	TimeLessThanTwelveHours = 16
-	TimeLessThanDay         = 15
-	TimeLessThanTwoDays     = 14
-	TimeLessThanWeek        = 13
-	TimeLessThanTwoWeeks    = 12
-	TimeLessThanMonth       = 11
-	TimeLessThanTwoMonths   = 10
+	TimeLessThanMinute      = 42
+	TimeLessThanFiveMinutes = 39
+	TimeLessThanHour        = 36
+	TimeLessThanSixHours    = 33
+	TimeLessThanTwelveHours = 30
+	TimeLessThanDay         = 27
+	TimeLessThanTwoDays     = 24
+	TimeLessThanWeek        = 21
+	TimeLessThanTwoWeeks    = 18
+	TimeLessThanMonth       = 15
+	TimeLessThanTwoMonths   = 12
 	TimeLessThanSixMonths   = 9
-	TimeLessThanYear        = 8
-	TimeOlderThanAYear      = 7
+	TimeLessThanYear        = 6
+	TimeOlderThanAYear      = 3
 
 	StrEquals          = 100
 	StrEqualsWrongCase = 80
@@ -78,10 +79,13 @@ func (f *Folder) rate(s string) int {
 	base := path.Base(f.Path)
 	var n int
 	n += checkBaseSimilarity(base, s)
+	fmt.Println("s:", n)
 	if n == NoMatch {
 		return n
 	}
-	n += ratePassedTime(f.Times)
+	timeRate := ratePassedTime(f.Times)
+	n += timeRate
+	fmt.Println("t:", timeRate)
 
 	// if base == s {
 	// 	n += StrEquals

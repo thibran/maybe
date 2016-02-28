@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"testing"
 	"time"
 )
@@ -262,4 +263,39 @@ func TestRateTime_olderThanAYea(t *testing.T) {
 		t.Fail()
 	}
 	//fmt.Println(n)
+}
+
+func TestRate_maxRating(t *testing.T) {
+	s := "foo"
+	now := time.Now().Add(-time.Second * 40)
+	f := &Folder{
+		Path:  "/home/foo",
+		Count: 1,
+		Times: Times{now},
+	}
+	n := f.rate(s)
+	if n != StrEquals+TimeLessThanMinute {
+		t.Fail()
+	}
+	fmt.Println(n)
+}
+
+func TestRate_foo(t *testing.T) {
+	s := "foo"
+	now := time.Now()
+	t1 := now.Add(-time.Second * 40)
+	t2 := now.Add(-time.Hour * 18)
+	t3 := now.Add(-time.Hour * 24)
+	t4 := now.Add(-time.Hour * 24 * 2)
+	t5 := now.Add(-time.Hour * 24 * 7 * 2)
+	f := &Folder{
+		Path:  "/home/foo",
+		Count: 1,
+		Times: Times{t1, t2, t3, t4, t5},
+	}
+	n := f.rate(s)
+	// if n != StrEquals+TimeLessThanMinute {
+	// 	t.Fail()
+	// }
+	fmt.Println(n)
 }
