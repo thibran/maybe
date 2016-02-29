@@ -5,16 +5,33 @@ import (
 	"time"
 )
 
+func nowTimeRepo() *RepoDummy {
+	now := time.Now()
+	f1 := Folder{
+		Path:  "/home/nfoo",
+		Count: 1,
+		Times: Times{now.Add(-time.Second * 40)},
+	}
+	f2 := Folder{
+		Path:  "/home/foo",
+		Count: 1,
+		Times: Times{now.Add(-time.Hour * 18)},
+	}
+	f3 := Folder{
+		Path:  "/etc/apt",
+		Count: 1,
+		Times: Times{now.Add(-time.Hour * 24 * 7 * 2)},
+	}
+	return &RepoDummy{m: map[string]Folder{
+		f1.Path: f1,
+		f2.Path: f2,
+		f3.Path: f3,
+	}}
+}
+
 func TestNewRepoDummy(t *testing.T) {
 	r := NewRepoDummy()
 	if r == nil {
-		t.Fail()
-	}
-}
-
-func TestAll(t *testing.T) {
-	r := NewRepoDummy()
-	if len(r.All()) != len(r.m) {
 		t.Fail()
 	}
 }
@@ -40,6 +57,17 @@ func TestAdd_updateExisting(t *testing.T) {
 		t.Error("Times[0] should be equals timeNow.")
 	}
 	if len(f.Times) > MaxTimesEntries {
+		t.Fail()
+	}
+}
+
+func TestSearch(t *testing.T) {
+	r := nowTimeRepo()
+	rf, err := r.Search("foo")
+	if err != nil {
+		t.Fail()
+	}
+	if rf.Folder.Path != "/home/foo" {
 		t.Fail()
 	}
 }

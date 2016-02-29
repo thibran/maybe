@@ -43,14 +43,6 @@ type Folder struct {
 	Times Times // last MaxTimesEntries updates
 }
 
-// // Compare folder with another folder object.
-// func (f *Folder) Compare(s string, other *Folder) *Folder {
-// 	if f.rate(s) >= other.rate(s) {
-// 		return f
-// 	}
-// 	return other
-// }
-
 type RatedFolder struct {
 	Points int
 	Folder Folder
@@ -112,7 +104,7 @@ const (
 func (f *Folder) rate(s string) int {
 	base := path.Base(f.Path)
 	var n int
-	n += checkBaseSimilarity(base, s)
+	n += rateKeySimilarity(base, s)
 	//fmt.Println("s:", n)
 	// no string match -> return
 	if n == NoMatch {
@@ -192,7 +184,7 @@ func rateTime(now, t time.Time) int {
 
 // TODO write startWith endWith checks
 // if len(s) is combined in word -> StrContains
-func checkBaseSimilarity(base, s string) int {
+func rateKeySimilarity(base, s string) int {
 	// equals
 	if base == s {
 		return StrEquals

@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-	"sort"
 	"testing"
 	"time"
 )
@@ -18,108 +16,70 @@ func TestSort(t *testing.T) {
 	}
 }
 
-// func TestCompare_equals(t *testing.T) {
-// 	s := "foo"
-// 	f1 := &Folder{
-// 		Path:  "/home/foo",
-// 		Count: 1,
-// 		Times: Times{
-// 			time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC),
-// 		}}
-// 	f2 := &Folder{
-// 		Path:  "/home/foo",
-// 		Count: 1,
-// 		Times: Times{
-// 			time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC),
-// 		}}
-// 	if f1.Compare(s, f2) != f1 {
-// 		t.Fail()
-// 	}
-// }
-
-// func TestCompare_directMatch(t *testing.T) {
-// 	s := "foo"
-// 	f1 := &Folder{
-// 		Path:  "/home/foo",
-// 		Count: 1,
-// 		Times: Times{
-// 			time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC),
-// 		}}
-// 	f2 := &Folder{
-// 		Path:  "/home/nfoo",
-// 		Count: 1,
-// 		Times: Times{
-// 			time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC),
-// 		}}
-// 	if f1.Compare(s, f2) != f1 {
-// 		t.Fail()
-// 	}
-// }
-
-func TestCheckBaseSimilarity_quals(t *testing.T) {
+func TestRateKeySimilarity_quals(t *testing.T) {
 	base := "foo"
 	s := "foo"
-	n := checkBaseSimilarity(base, s)
+	n := rateKeySimilarity(base, s)
 	if n != StrEquals {
 		t.Fail()
 	}
 	//fmt.Println(n)
 }
 
-func TestCheckBaseSimilarity_wrongCase(t *testing.T) {
+func TestRateKeySimilarity_wrongCase(t *testing.T) {
 	base := "Foo"
 	s := "foo"
-	n := checkBaseSimilarity(base, s)
+	n := rateKeySimilarity(base, s)
 	if n != StrEqualsWrongCase {
 		t.Fail()
 	}
 	//fmt.Println(n)
 }
 
-func TestCheckBaseSimilarity_noMatch(t *testing.T) {
+func TestRateKeySimilarity_noMatch(t *testing.T) {
 	base := "foo"
 	s := "Bar"
-	n := checkBaseSimilarity(base, s)
+	n := rateKeySimilarity(base, s)
 	if n != NoMatch {
 		t.Fail()
 	}
 	//fmt.Println(n)
 }
 
-func TestCheckBaseSimilarity_startsWith(t *testing.T) {
+func TestRateKeySimilarity_startsWith(t *testing.T) {
 	base := "foobar"
 	s := "foo"
-	n := checkBaseSimilarity(base, s)
+	n := rateKeySimilarity(base, s)
 	if n != StrStartsEndsWith {
 		t.Fail()
 	}
 	//fmt.Println(n)
 }
 
-func TestCheckBaseSimilarity_endsWith(t *testing.T) {
+func TestRateKeySimilarity_endsWith(t *testing.T) {
 	base := "superfoo"
 	s := "foo"
-	n := checkBaseSimilarity(base, s)
+	n := rateKeySimilarity(base, s)
 	if n != StrStartsEndsWith {
 		t.Fail()
 	}
 	//fmt.Println(n)
 }
 
-func TestCheckBaseSimilarity_contains(t *testing.T) {
+func TestRateKeySimilarity_contains(t *testing.T) {
 	base := "nfooD"
 	s := "foo"
-	n := checkBaseSimilarity(base, s)
+	n := rateKeySimilarity(base, s)
 	if n != StrContains {
 		t.Fail()
 	}
 	//fmt.Println(n)
 }
 
-func TestCheckBaseSimilarity_similar(t *testing.T) {
+func TestRateKeySimilarity_similar(t *testing.T) {
 	base := "Bar"
 	s := "bao"
-	n := checkBaseSimilarity(base, s)
+	n := rateKeySimilarity(base, s)
 	if n != StrSimilar {
 		t.Fail()
 	}
@@ -278,7 +238,7 @@ func TestRate_maxRating(t *testing.T) {
 	if n != StrEquals+TimeLessThanMinute {
 		t.Fail()
 	}
-	fmt.Println(n)
+	//fmt.Println(n)
 }
 
 func TestRate_foo(t *testing.T) {
@@ -294,51 +254,24 @@ func TestRate_foo(t *testing.T) {
 		Count: 1,
 		Times: Times{t1, t2, t3, t4, t5},
 	}
-	n := f.rate(s)
-	// if n != StrEquals+TimeLessThanMinute {
-	// 	t.Fail()
-	// }
-	fmt.Println(n)
+	f.rate(s)
+	//fmt.Println(n)
 }
 
-func nowTimeRepo() *RepoDummy {
-	now := time.Now()
-	f1 := Folder{
-		Path:  "/home/nfoo",
-		Count: 1,
-		Times: Times{now.Add(-time.Second * 40)},
-	}
-	f2 := Folder{
-		Path:  "/home/foo",
-		Count: 1,
-		Times: Times{now.Add(-time.Hour * 18)},
-	}
-	f3 := Folder{
-		Path:  "/etc/apt",
-		Count: 1,
-		Times: Times{now.Add(-time.Hour * 24 * 7 * 2)},
-	}
-	return &RepoDummy{m: map[string]Folder{
-		f1.Path: f1,
-		f2.Path: f2,
-		f3.Path: f3,
-	}}
-}
-
-func TestBar(t *testing.T) {
-	s := "foo"
-	r := nowTimeRepo()
-	var a RatedFolders
-	for _, f := range r.All() {
-		rf := NewRatedFolder(f, s)
-		if rf.Points == NoMatch {
-			continue
-		}
-		//fmt.Println("append:", rf.Folder, " points:", rf.Points)
-		a = append(a, rf)
-	}
-	fmt.Println(a)
-	fmt.Println("-----------------------------------------------")
-	sort.Sort(a)
-	fmt.Println(a)
-}
+// func TestBar(t *testing.T) {
+// 	s := "foo"
+// 	r := nowTimeRepo()
+// 	var a RatedFolders
+// 	for _, f := range r.All() {
+// 		rf := NewRatedFolder(f, s)
+// 		if rf.Points == NoMatch {
+// 			continue
+// 		}
+// 		//fmt.Println("append:", rf.Folder, " points:", rf.Points)
+// 		a = append(a, rf)
+// 	}
+// 	fmt.Println(a)
+// 	fmt.Println("-----------------------------------------------")
+// 	sort.Sort(a)
+// 	fmt.Println(a)
+// }
