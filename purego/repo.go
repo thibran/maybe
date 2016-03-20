@@ -6,10 +6,21 @@ import (
 	"time"
 )
 
+// Saver abstracts saving of an object.
+type Saver interface {
+	Save() error
+}
+
+type Loader interface {
+	Load()
+}
+
 // Repo abstracts the data storage.
 type Repo interface {
 	Add(path string, t time.Time)         // Add new folder to the repo.
 	Search(s string) (RatedFolder, error) // Search for the key s in the repo
+	Saver
+	Loader
 }
 
 var f1 = Folder{
@@ -93,4 +104,15 @@ func (r *RepoDummy) Search(s string) (RatedFolder, error) {
 	}
 	sort.Sort(a)
 	return a[0], nil
+}
+
+// Save method is ignored.
+func (r *RepoDummy) Save() error {
+	// TODO
+	return nil
+}
+
+// Load method is ignored.
+func (r *RepoDummy) Load() {
+	// TODO
 }
