@@ -9,7 +9,7 @@ import (
 )
 
 func TestSave(t *testing.T) {
-	tmpFile := os.TempDir() + "/" + "miaow_save"
+	tmpFile := os.TempDir() + "/" + "maybe_save"
 	r := NewFileRepo(tmpFile)
 	r.Add("/foo/bar", time.Now())
 	if err := r.Save(); err != nil {
@@ -18,7 +18,7 @@ func TestSave(t *testing.T) {
 }
 
 func TestLoad(t *testing.T) {
-	tmpFile := os.TempDir() + "/" + "miaow_load"
+	tmpFile := os.TempDir() + "/" + "maybe_load"
 	r := NewFileRepo(tmpFile)
 	r.Add("/foo/zot", time.Now())
 	r.Save()
@@ -35,12 +35,9 @@ func TestHomeDir(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-
-	cfgDir := user.HomeDir + "/.local/share/miaow"
-
+	cfgDir := user.HomeDir + "/.local/share/maybe"
 	if err := os.MkdirAll(cfgDir, 0777); err != nil {
 		panic(err)
 	}
-
 	fmt.Println(cfgDir)
 }

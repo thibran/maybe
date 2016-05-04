@@ -43,19 +43,22 @@ type Folder struct {
 	Times Times // last MaxTimesEntries updates
 }
 
+// RatedFolder object.
 type RatedFolder struct {
 	Points int
 	Folder Folder
 }
 
+// RatedFolders is an alias for RatedFolder-slice.
+type RatedFolders []RatedFolder
+
+// NewRatedFolder creates a new object.
 func NewRatedFolder(f Folder, s string) RatedFolder {
 	return RatedFolder{
-		Points: f.rate(s),
+		Points: rate(s, f.Path, f.Times),
 		Folder: f,
 	}
 }
-
-type RatedFolders []RatedFolder
 
 func (a RatedFolders) String() string {
 	arr := make([]string, len(a))
@@ -70,6 +73,9 @@ func (a RatedFolders) Len() int {
 }
 
 func (a RatedFolders) Less(i, j int) bool {
+	if a[i].Points == a[j].Points {
+        return a[i].Folder.Count > a[j].Folder.Count
+    }
 	return a[i].Points > a[j].Points
 }
 
@@ -101,8 +107,9 @@ const (
 	NoMatch            = 0
 )
 
-func (f *Folder) rate(s string) int {
-	base := path.Base(f.Path)
+// rate search-term s for path p with time-slice a.
+func rate(s, p string, a Times) int {
+	base := path.Base(p)
 	var n int
 	n += rateKeySimilarity(base, s)
 	//fmt.Println("s:", n)
@@ -110,7 +117,7 @@ func (f *Folder) rate(s string) int {
 	if n == NoMatch {
 		return n
 	}
-	timeRate := ratePassedTime(f.Times)
+	timeRate := ratePassedTime(a)
 	n += timeRate
 	//fmt.Println("t:", timeRate)
 	return n

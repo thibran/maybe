@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"testing"
 	"time"
 )
@@ -234,11 +235,18 @@ func TestRate_maxRating(t *testing.T) {
 		Count: 1,
 		Times: Times{now},
 	}
-	n := f.rate(s)
+	n := rate(s, f.Path, f.Times)
 	if n != StrEquals+TimeLessThanMinute {
 		t.Fail()
 	}
-	//fmt.Println(n)
+	// n2 := rate2(s, "/home/foo", f.Times)
+	// if n != n2 {
+	// 	t.Fail()
+	// }
+}
+
+func TestRate2(t *testing.T) {
+
 }
 
 func TestRate_foo(t *testing.T) {
@@ -254,8 +262,8 @@ func TestRate_foo(t *testing.T) {
 		Count: 1,
 		Times: Times{t1, t2, t3, t4, t5},
 	}
-	f.rate(s)
-	//fmt.Println(n)
+	n := rate(s, f.Path, f.Times)
+	fmt.Println(n)
 }
 
 // func TestBar(t *testing.T) {

@@ -15,17 +15,26 @@ import (
 //  history()  // return last 10 Folder objects
 //  don't show result if under a certain limit
 
+var maxEntries = 300 // Maximum number of history entries to keep.
+const minMaxEntries = 50
+
 func main() {
 	// flag
 	dataDir := flag.String("datadir", defaultDataDir(), "")
 	add := flag.String("add", "", "add path")
-	s := flag.String("search", "", "search for")
+	search := flag.String("search", "", "search for")
+	show := flag.String("show", "", "show results for")
 	version := flag.Bool("version", false, "print maybe version")
+	entries := flag.Int("max-entries", maxEntries, "Maximum number of unique saved path-entries (minimum 50).")
 	flag.Parse()
 	if *version {
-		fmt.Printf("maybe 0.1.1   %s\n", runtime.Version())
+		fmt.Printf("maybe 0.1.2   %s\n", runtime.Version())
 		os.Exit(0)
 	}
+	if *entries < minMaxEntries {
+		*entries = minMaxEntries
+	}
+	maxEntries = *entries
 	// create data dir, if not existent
 	if err := os.MkdirAll(*dataDir, 0770); err != nil {
 		panic(err)
@@ -42,12 +51,28 @@ func main() {
 		}
 		return
 	}
+	// show flag
+	if len(*show) != 0 {
+		handleShow(r, *show)
+		return
+	}
 	// searching for someting?
-	if len(*s) != 0 {
-		handleSearch(r, *s)
+	if len(*search) != 0 {
+		handleSearch(r, *search)
 		return
 	}
 	os.Exit(1)
+}
+
+func handleShow(r Repo, show string) {
+	a := r.Show(show, 10)
+	if len(a) == 0 {
+		return
+	}
+	fmt.Println("Points\tFolder")
+	for _, rf := range a {
+		fmt.Printf("%d\t%s\n", rf.Points, rf.Folder.Path)
+	}
 }
 
 func handleSearch(r Repo, search string) {

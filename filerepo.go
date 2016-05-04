@@ -40,23 +40,42 @@ func (r *FileRepo) Add(path string, t time.Time) {
 	f.Times = append(f.Times, t)
 	f.Times = f.Times.sort() // sort and keep only data.MaxTimesEntries
 	r.m[path] = f
+
+	// ++++++++++++++++++
+	//if 
+
 }
 
-// Search repo for the key s.
-func (r *FileRepo) Search(s string) (RatedFolder, error) {
+// search for s and sort results.
+func search(m map[string]Folder, s string, f sortRatedFolders) RatedFolders {
 	var a RatedFolders
-	for _, f := range r.m {
+	for _, f := range m {
 		rf := NewRatedFolder(f, s)
 		if rf.Points == NoMatch {
 			continue
 		}
 		a = append(a, rf)
 	}
+	f(a)
+	return a
+}
+
+// Search repo for the key s.
+func (r *FileRepo) Search(s string) (RatedFolder, error) {
+	a := search(r.m, s, func(a RatedFolders) { sort.Sort(a) })
 	if len(a) == 0 {
 		return RatedFolder{}, errors.New("no result")
 	}
-	sort.Sort(a)
 	return a[0], nil
+}
+
+// Show returns n RatedFolders.
+func (r *FileRepo) Show(s string, n int) RatedFolders {
+	a := search(r.m, s, func(a RatedFolders) { sort.Sort(a) })
+	if len(a) < n {
+		n = len(a)
+	}
+	return a[0:n]
 }
 
 // Save repo map to dataPath.
@@ -86,3 +105,17 @@ func (r *FileRepo) Load() {
 	}
 	r.m = m
 }
+
+// // search for s and sort results.
+// func (r *FileRepo) search(s string) RatedFolders {
+// 	var a RatedFolders
+// 	for _, f := range r.m {
+// 		rf := NewRatedFolder(f, s)
+// 		if rf.Points == NoMatch {
+// 			continue
+// 		}
+// 		a = append(a, rf)
+// 	}
+// 	sort.Sort(a)
+// 	return a
+// }
