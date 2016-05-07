@@ -21,6 +21,7 @@ type Repo interface {
 	Add(path string, t time.Time)          // Add new folder to the repo.
 	Search(s string) (RatedFolder, error)  // Search for the key s in the repo
 	Show(s string, n int) (a RatedFolders) // Show returns n RatedFolders.
+	Size() int                             // Size returns the number of entries.
 	Saver
 	Loader
 }

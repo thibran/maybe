@@ -82,6 +82,8 @@ func (r *RepoDummy) Load() {
 	// TODO
 }
 
+func (r *RepoDummy) Size() int { return len(r.m) }
+
 var f1 = Folder{
 	Path:  "/home/foo",
 	Count: 1,
@@ -157,36 +159,6 @@ func TestAdd_updateExisting(t *testing.T) {
 	if len(f.Times) > MaxTimesEntries {
 		t.Fail()
 	}
-}
-
-func TestAdd_cutFolderEntries(t *testing.T) {
-	// maxEntries = 300 // Maximum number of history entries to keep.
-	// minMaxEntries = 50
-
-	entries := 281
-
-	// cut needed
-	if entries <= maxEntries-20 {
-		fmt.Println("no cut needed")
-		return
-	}
-	// number of newest entries to keep
-	keep := maxEntries - maxEntries/3
-	fmt.Println("toKeep:", keep)
-
-	// r := NewRepoDummy()
-	// timeNow := time.Now()
-	// r.Add(f1.Path, timeNow)
-	// f := r.m[f1.Path]
-	// if f.Count != 2 {
-	// 	t.Fail()
-	// }
-	// if f.Times[0] != timeNow {
-	// 	t.Error("Times[0] should be equals timeNow.")
-	// }
-	// if len(f.Times) > MaxTimesEntries {
-	// 	t.Fail()
-	// }
 }
 
 func TestSearch(t *testing.T) {

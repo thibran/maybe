@@ -27,16 +27,16 @@ func dummyRatedTimeFolders() RatedTimeFolders {
 }
 
 func TestNewRatedTimeFolder(t *testing.T) {
-    a := dummyRatedTimeFolders()
-    sort.Sort(a)
+	a := dummyRatedTimeFolders()
+	sort.Sort(a)
 	if a[0].Folder.Path != "/home/foo" {
 		t.Fail()
 	}
 }
 
 func TestRemoveOldestFolders(t *testing.T) {
-    a := dummyRatedTimeFolders()
-    m := a.removeOldestFolders(2)
+	a := dummyRatedTimeFolders()
+	m := a.removeOldestFolders(2)
 	if len(m) != 2 {
 		t.Fail()
 	}

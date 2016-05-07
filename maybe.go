@@ -9,13 +9,11 @@ import (
 	"time"
 )
 
-// TODO
-// Repo:
-// 	max folder entries
-//  history()  // return last 10 Folder objects
-//  don't show result if under a certain limit
+// TODO:
+//   history()  // return last 10 Folder objects
+//   don't show result if under a certain limit
 
-var maxEntries = 300 // Maximum number of history entries to keep.
+var maxEntries = 200 // Maximum number of history entries to keep.
 const minMaxEntries = 50
 
 func main() {
@@ -27,22 +25,22 @@ func main() {
 	version := flag.Bool("version", false, "print maybe version")
 	entries := flag.Int("max-entries", maxEntries, "Maximum number of unique saved path-entries (minimum 50).")
 	flag.Parse()
-	if *version {
-		fmt.Printf("maybe 0.1.2   %s\n", runtime.Version())
-		os.Exit(0)
-	}
+	var r Repo
+	r = NewFileRepo(*dataDir + "/maybe.data")
+	r.Load()
 	if *entries < minMaxEntries {
 		*entries = minMaxEntries
 	}
 	maxEntries = *entries
+
+	if *version {
+		fmt.Printf("maybe 0.2   entries: %d   %s\n", r.Size(), runtime.Version())
+		os.Exit(0)
+	}
 	// create data dir, if not existent
 	if err := os.MkdirAll(*dataDir, 0770); err != nil {
 		panic(err)
 	}
-	// load data
-	var r Repo
-	r = NewFileRepo(*dataDir + "/maybe.data")
-	r.Load()
 	// add path to maybe?
 	if len(*add) != 0 {
 		r.Add(*add, time.Now())

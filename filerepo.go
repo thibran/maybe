@@ -40,10 +40,12 @@ func (r *FileRepo) Add(path string, t time.Time) {
 	f.Times = append(f.Times, t)
 	f.Times = f.Times.sort() // sort and keep only data.MaxTimesEntries
 	r.m[path] = f
-
-	// ++++++++++++++++++
-	//if 
-
+	// remove oldest File entries if necessary
+	if len(r.m) <= maxEntries {
+		return
+	}
+	a := NewRatedTimeFolderSlice(r.m)
+	r.m = a.removeOldestFolders(maxEntries - maxEntries/3)
 }
 
 // search for s and sort results.
@@ -106,16 +108,4 @@ func (r *FileRepo) Load() {
 	r.m = m
 }
 
-// // search for s and sort results.
-// func (r *FileRepo) search(s string) RatedFolders {
-// 	var a RatedFolders
-// 	for _, f := range r.m {
-// 		rf := NewRatedFolder(f, s)
-// 		if rf.Points == NoMatch {
-// 			continue
-// 		}
-// 		a = append(a, rf)
-// 	}
-// 	sort.Sort(a)
-// 	return a
-// }
+func (r *FileRepo) Size() int { return len(r.m) }

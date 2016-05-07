@@ -74,8 +74,8 @@ func (a RatedFolders) Len() int {
 
 func (a RatedFolders) Less(i, j int) bool {
 	if a[i].Points == a[j].Points {
-        return a[i].Folder.Count > a[j].Folder.Count
-    }
+		return a[i].Folder.Count > a[j].Folder.Count
+	}
 	return a[i].Points > a[j].Points
 }
 
