@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"os/user"
 	"runtime"
@@ -10,56 +11,84 @@ import (
 )
 
 // TODO:
-//   history()  // return last 10 Folder objects
+//   better recognize words in the middle like 'aaa' in 'b_aaa_c'!
 //   don't show result if under a certain limit
 
-var maxEntries = 200 // Maximum number of history entries to keep.
-const minMaxEntries = 50
+// TODO entering 'snip' should revalve the second path, not the first
+// Points  Folder
+// 242     /home/tux/annex/bin
+// 153     /home/tux/src/haskell/snipped
+
+const (
+	appVersion    = "0.2.6"
+	minMaxEntries = 30
+)
+
+type pref struct {
+	dataDir    string
+	add        string
+	search     string
+	show       string
+	version    bool
+	maxEntries int
+}
+
+func parse() pref {
+	var p pref
+	flag.StringVar(&p.dataDir, "datadir", defaultDataDir(), "")
+	flag.StringVar(&p.add, "add", "", "add path to maybe index")
+	flag.StringVar(&p.search, "search", "", "search for keyword")
+	flag.StringVar(&p.show, "show", "", "show results for keyword")
+	flag.BoolVar(&p.version, "version", false, "print maybe version")
+	flag.IntVar(&p.maxEntries, "max-entries", minMaxEntries, "Maximum number of unique path-entries (minimum 30).")
+	flag.Parse()
+	if p.maxEntries < minMaxEntries {
+		p.maxEntries = minMaxEntries
+	}
+	return p
+}
 
 func main() {
-	// flag
-	dataDir := flag.String("datadir", defaultDataDir(), "")
-	add := flag.String("add", "", "add path")
-	search := flag.String("search", "", "search for")
-	show := flag.String("show", "", "show results for")
-	version := flag.Bool("version", false, "print maybe version")
-	entries := flag.Int("max-entries", maxEntries, "Maximum number of unique saved path-entries (minimum 50).")
-	flag.Parse()
-	var r Repo
-	r = NewFileRepo(*dataDir + "/maybe.data")
+	p := parse()
+	r := NewFileRepo(p.dataDir+"/maybe.data", p.maxEntries)
 	r.Load()
-	if *entries < minMaxEntries {
-		*entries = minMaxEntries
-	}
-	maxEntries = *entries
 
-	if *version {
-		fmt.Printf("maybe 0.2   entries: %d   %s\n", r.Size(), runtime.Version())
+	// version
+	if p.version {
+		handleVersion(r)
 		os.Exit(0)
 	}
 	// create data dir, if not existent
-	if err := os.MkdirAll(*dataDir, 0770); err != nil {
-		panic(err)
+	if err := os.MkdirAll(p.dataDir, 0770); err != nil {
+		log.Fatalf("main - create data dir: %s\n", err)
 	}
-	// add path to maybe?
-	if len(*add) != 0 {
-		r.Add(*add, time.Now())
+
+	// add path
+	if len(p.add) != 0 {
+		r.Add(p.add, time.Now())
 		if err := r.Save(); err != nil {
-			panic(err)
+			log.Fatalf("main - add path: %s\n", err)
 		}
 		return
 	}
-	// show flag
-	if len(*show) != 0 {
-		handleShow(r, *show)
+	// search
+	if len(p.search) != 0 {
+		handleSearch(r, p.search)
 		return
 	}
-	// searching for someting?
-	if len(*search) != 0 {
-		handleSearch(r, *search)
+	// show
+	if len(p.show) != 0 {
+		handleShow(r, p.show)
 		return
 	}
+	fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
+	flag.PrintDefaults()
 	os.Exit(1)
+}
+
+func handleVersion(r Repo) {
+	fmt.Printf("maybe %s   entries: %d   %s\n",
+		appVersion, r.Size(), runtime.Version())
 }
 
 func handleShow(r Repo, show string) {
@@ -69,7 +98,7 @@ func handleShow(r Repo, show string) {
 	}
 	fmt.Println("Points\tFolder")
 	for _, rf := range a {
-		fmt.Printf("%d\t%s\n", rf.Points, rf.Folder.Path)
+		fmt.Printf("%d\t%s\n", rf.points(), rf.folder.path)
 	}
 }
 
@@ -77,15 +106,15 @@ func handleSearch(r Repo, search string) {
 	rf, err := r.Search(search)
 	if err != nil {
 		// no result found
-		os.Exit(1)
+		return
 	}
-	fmt.Println(rf.Folder.Path)
+	fmt.Println(rf.folder.path)
 }
 
 func defaultDataDir() string {
 	user, err := user.Current()
 	if err != nil {
-		panic(err)
+		log.Fatalf("unknown DataDir: %s\n", err)
 	}
 	return user.HomeDir + "/.local/share/maybe"
 }
