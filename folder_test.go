@@ -6,12 +6,12 @@ import (
 )
 
 func TestSort(t *testing.T) {
-	a := Times{f1.times[0], f2.times[0], f3.times[0]}
+	a := Times{f1.Times[0], f2.Times[0], f3.Times[0]}
 	a = a.sort()
-	if a[0] != f3.times[0] {
+	if a[0] != f3.Times[0] {
 		t.Fail()
 	}
-	if a[1] != f2.times[0] {
+	if a[1] != f2.Times[0] {
 		t.Fail()
 	}
 }
@@ -65,7 +65,7 @@ func dummy() RatedTimeFolders {
 func TestTimeRatedSort(t *testing.T) {
 	a := dummy()
 	a.sort()
-	if a[0].folder.path != "/home/foo" {
+	if a[0].folder.Path != "/home/foo" {
 		t.Fail()
 	}
 }

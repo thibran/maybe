@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/gob"
 	"errors"
+	"fmt"
 	"log"
 	"os"
 	"sync"
@@ -16,7 +17,7 @@ type Saver interface {
 
 // Loader abstract loading of implementing object.
 type Loader interface {
-	Load()
+	Load() error
 }
 
 // Repo abstracts the data storage.
@@ -55,9 +56,9 @@ func (r *FileRepo) Add(path string, t time.Time) {
 		return
 	}
 	// update existing folder object
-	f.count++
-	f.times = append(f.times, t)
-	f.times = f.times.sort() // sort and keep only data.MaxTimesEntries
+	f.Count++
+	f.Times = append(f.Times, t)
+	f.Times = f.Times.sort() // sort and keep only data.MaxTimesEntries
 	r.m[path] = f
 	// remove oldest File entries if necessary
 	if len(r.m) <= r.maxEntries {
@@ -154,20 +155,22 @@ func (r *FileRepo) Save() error {
 	return nil
 }
 
+var errNoFile = fmt.Errorf("file not found")
+
 // Load repo map from dataPath.
-func (r *FileRepo) Load() {
+func (r *FileRepo) Load() error {
 	f, err := os.Open(r.dataPath)
 	if err != nil {
-		// no file found
-		return
+		return errNoFile
 	}
 	defer f.Close()
 	var m map[string]Folder
 	dec := gob.NewDecoder(f)
 	if err := dec.Decode(&m); err != nil {
-		panic(err)
+		return fmt.Errorf("can not decode: %s %v", r.dataPath, err)
 	}
 	r.m = m
+	return nil
 }
 
 // Size of the repository.

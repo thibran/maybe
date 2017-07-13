@@ -10,17 +10,17 @@ import (
 
 // Folder entry.
 type Folder struct {
-	path  string
-	count uint  // counts how often the folder has been updated
-	times Times // last MaxTimesEntries updates
+	Path  string
+	Count uint  // counts how often the folder has been updated
+	Times Times // last MaxTimesEntries updates
 }
 
 // NewFolder object.
 func NewFolder(path string, count uint, times Times) Folder {
 	return Folder{
-		path:  path,
-		count: count,
-		times: times,
+		Path:  path,
+		Count: count,
+		Times: times,
 	}
 }
 
@@ -47,8 +47,8 @@ type RatedFolders []RatedFolder
 // NewRatedFolder creates a new object.
 func NewRatedFolder(f Folder, query string) RatedFolder {
 	return RatedFolder{
-		timePoints:       ratePassedTime(f.times),
-		similarityPoints: rateSimilarity(path.Base(f.path), query),
+		timePoints:       ratePassedTime(f.Times),
+		similarityPoints: rateSimilarity(path.Base(f.Path), query),
 		folder:           f,
 	}
 }
@@ -67,7 +67,7 @@ func (a RatedFolders) sort() {
 		pi := a[i].points()
 		pj := a[j].points()
 		if pi == pj {
-			return a[i].folder.count > a[j].folder.count
+			return a[i].folder.Count > a[j].folder.Count
 		}
 		return pi > pj
 	})
@@ -97,7 +97,7 @@ func (a RatedTimeFolders) removeOldestFolders(n int) map[string]Folder {
 	}
 	m := make(map[string]Folder, len(a))
 	for _, rf := range a {
-		m[rf.folder.path] = rf.folder
+		m[rf.folder.Path] = rf.folder
 	}
 	return m
 }
@@ -105,7 +105,7 @@ func (a RatedTimeFolders) removeOldestFolders(n int) map[string]Folder {
 func (a RatedTimeFolders) sort() {
 	sort.Slice(a, func(i, j int) bool {
 		if a[i].timePoints == a[j].timePoints {
-			return a[i].folder.count > a[j].folder.count
+			return a[i].folder.Count > a[j].folder.Count
 		}
 		return a[i].timePoints > a[j].timePoints
 	})

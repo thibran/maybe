@@ -14,9 +14,9 @@ type RepoDummy struct {
 // NewRepoDummy creates an in-memory repo containing dummy values.
 func NewRepoDummy() *RepoDummy {
 	return &RepoDummy{m: map[string]Folder{
-		f1.path: f1,
-		f2.path: f2,
-		f3.path: f3,
+		f1.Path: f1,
+		f2.Path: f2,
+		f3.Path: f3,
 	}}
 }
 
@@ -34,9 +34,9 @@ func (r *RepoDummy) Add(path string, t time.Time) {
 		return
 	}
 	// update existing folder object
-	f.count++
-	f.times = append(f.times, t)
-	f.times = f.times.sort()
+	f.Count++
+	f.Times = append(f.Times, t)
+	f.Times = f.Times.sort()
 	r.m[path] = f
 }
 
@@ -110,9 +110,9 @@ func nowTimeRepo() *RepoDummy {
 		Times{now.Add(-time.Hour * 24 * 7 * 2)},
 	)
 	return &RepoDummy{m: map[string]Folder{
-		v1.path: v1,
-		v2.path: v2,
-		v3.path: v3,
+		v1.Path: v1,
+		v2.Path: v2,
+		v3.Path: v3,
 	}}
 }
 
@@ -135,15 +135,15 @@ func TestAdd_newObj(t *testing.T) {
 func TestAdd_updateExisting(t *testing.T) {
 	r := NewRepoDummy()
 	timeNow := time.Now()
-	r.Add(f1.path, timeNow)
-	f := r.m[f1.path]
-	if f.count != 2 {
+	r.Add(f1.Path, timeNow)
+	f := r.m[f1.Path]
+	if f.Count != 2 {
 		t.Fail()
 	}
-	if f.times[0] != timeNow {
+	if f.Times[0] != timeNow {
 		t.Error("Times[0] should be equals timeNow.")
 	}
-	if len(f.times) > MaxTimesEntries {
+	if len(f.Times) > MaxTimesEntries {
 		t.Fail()
 	}
 }
@@ -165,7 +165,7 @@ func TestSearch_Repo(t *testing.T) {
 	if err != nil {
 		t.Fail()
 	}
-	if rf.folder.path != "/home/foo" {
+	if rf.folder.Path != "/home/foo" {
 		t.Fail()
 	}
 }
@@ -175,7 +175,7 @@ func TestShow(t *testing.T) {
 	if len(a) == 0 {
 		t.Fail()
 	}
-	if a[0].folder.path != "/home/foo" {
+	if a[0].folder.Path != "/home/foo" {
 		t.Fail()
 	}
 }

@@ -169,7 +169,7 @@ func TestRate_maxRating(t *testing.T) {
 		1,
 		Times{now},
 	)
-	n := rate(s, f.path, f.times)
+	n := rate(s, f.Path, f.Times)
 	if n != strEquals+timeLessThanMinute {
 		t.Fail()
 	}

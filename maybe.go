@@ -51,18 +51,21 @@ func parse() pref {
 func main() {
 	p := parse()
 	r := NewFileRepo(p.dataDir+"/maybe.data", p.maxEntries)
-	r.Load()
-
+	// load data
+	if err := r.Load(); err != nil {
+		if err != errNoFile {
+			log.Fatalln(err)
+		}
+		// create data dir, if not existent
+		if err := os.MkdirAll(p.dataDir, 0770); err != nil {
+			log.Fatalf("main - create data dir: %s\n", err)
+		}
+	}
 	// version
 	if p.version {
 		handleVersion(r)
 		os.Exit(0)
 	}
-	// create data dir, if not existent
-	if err := os.MkdirAll(p.dataDir, 0770); err != nil {
-		log.Fatalf("main - create data dir: %s\n", err)
-	}
-
 	// add path
 	if len(p.add) != 0 {
 		r.Add(p.add, time.Now())
@@ -98,7 +101,7 @@ func handleShow(r Repo, show string) {
 	}
 	fmt.Println("Points\tFolder")
 	for _, rf := range a {
-		fmt.Printf("%d\t%s\n", rf.points(), rf.folder.path)
+		fmt.Printf("%d\t%s\n", rf.points(), rf.folder.Path)
 	}
 }
 
@@ -108,7 +111,7 @@ func handleSearch(r Repo, search string) {
 		// no result found
 		return
 	}
-	fmt.Println(rf.folder.path)
+	fmt.Println(rf.folder.Path)
 }
 
 func defaultDataDir() string {
