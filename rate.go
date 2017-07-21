@@ -116,49 +116,59 @@ func rateTime(now, t time.Time) uint {
 // TODO write startWith endWith checks
 // if len(s) is combined in word -> strContains
 func rateSimilarity(base, s string) uint {
-	// equals
+	l := logWithPrefix("rateSimilarity")
+	l("foo")
 	if base == s {
+		l("strEquals:", strEquals)
 		return strEquals
 	}
 	base = strings.ToLower(base)
 	s = strings.ToLower(s)
 	// equals wrong case
 	if base == s {
+		l("strEqualsWrongCase:", strEqualsWrongCase)
 		return strEqualsWrongCase
 	}
 	// starts or ends with
 	if strings.HasPrefix(base, s) || strings.HasSuffix(base, s) {
+		l("strStartsEndsWith:", strStartsEndsWith)
 		return strStartsEndsWith
 	}
 	// does base even contain s?
 	if strings.Contains(base, s) {
 		// TODO check how much different s is compared to base
+		l("strContains:", strContains)
 		return strContains
 	}
 	// search for similarities
 	baseLen := utf8.RuneCountInString(base)
 	// no similar comarisons on short words
 	if baseLen < 3 {
+		l("baseLen < 3:", noMatch)
 		return noMatch
 	}
-	var mindiff int
+	var maxdiff int
 	if baseLen <= 4 {
-		mindiff = 1
+		maxdiff = 1
 	} else if baseLen <= 10 {
-		mindiff = 2
+		maxdiff = 2
 	} else {
-		mindiff = 3
+		maxdiff = 3
 	}
-	// find differences
+	// find differences, e.g.: foo & foa are similare
 	var diff int
-	for _, r := range base {
-		// check if rune in searched string
-		if ok := strings.ContainsRune(s, r); !ok {
-			diff++
+	runes := []rune(s)
+	searchLen := len(runes)
+	for k, v := range base {
+		if k <= searchLen && v == runes[k] {
+			continue
 		}
+		diff++
 	}
-	if diff <= mindiff {
+	if diff <= maxdiff {
+		l("diff <= maxdiff:", strSimilar)
 		return strSimilar
 	}
+	l("end:", "noMatch:", noMatch)
 	return noMatch
 }

@@ -21,8 +21,10 @@ import (
 
 const (
 	appVersion    = "0.2.6"
-	minMaxEntries = 30
+	minMaxEntries = 30 // minimal value for the maxEntries variable
 )
+
+var verbose = false
 
 type pref struct {
 	dataDir    string
@@ -41,10 +43,12 @@ func parse() pref {
 	flag.StringVar(&p.show, "show", "", "show results for keyword")
 	flag.BoolVar(&p.version, "version", false, "print maybe version")
 	flag.IntVar(&p.maxEntries, "max-entries", minMaxEntries, "Maximum number of unique path-entries (minimum 30).")
+	verb := flag.Bool("v", false, "print verbose info about app execution")
 	flag.Parse()
 	if p.maxEntries < minMaxEntries {
 		p.maxEntries = minMaxEntries
 	}
+	verbose = *verb
 	return p
 }
 
