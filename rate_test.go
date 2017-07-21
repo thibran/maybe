@@ -40,9 +40,8 @@ func TestRateSimilarity_contains(t *testing.T) {
 func TestRateSimilarity_similar(t *testing.T) {
 	testSimilarity(t, "Bar", "bao", strSimilar)
 	testSimilarity(t, "Bar", "bart", strSimilar)
-	if rateSimilarity("tmp", "timer") != noMatch {
-		t.Fail()
-	}
+	testSimilarity(t, "tmp", "timer", noMatch)
+	testSimilarity(t, "pubip", "book", noMatch)
 }
 
 func testTime(t *testing.T, now, t1 time.Time, exp uint) uint {

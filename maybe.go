@@ -14,11 +14,6 @@ import (
 //   better recognize words in the middle like 'aaa' in 'b_aaa_c'!
 //   don't show result if under a certain limit
 
-// TODO entering 'snip' should revalve the second path, not the first
-// Points  Folder
-// 242     /home/tux/annex/bin
-// 153     /home/tux/src/haskell/snipped
-
 const (
 	appVersion    = "0.2.6"
 	minMaxEntries = 30 // minimal value for the maxEntries variable
