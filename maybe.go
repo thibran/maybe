@@ -6,9 +6,17 @@ import (
 	"log"
 	"os"
 	"os/user"
+	"path/filepath"
 	"runtime"
 	"time"
 )
+
+// TODO:
+//   allow user to ignore directories or names
+//   ignore .git folders by default
+
+// TODO:
+// don't show non-existent results
 
 // TODO:
 //   better recognize words in the middle like 'aaa' in 'b_aaa_c'!
@@ -63,7 +71,7 @@ func main() {
 	}
 	// version
 	if p.version {
-		handleVersion(r)
+		handleVersion(r, p.dataDir)
 		os.Exit(0)
 	}
 	// add path
@@ -89,9 +97,13 @@ func main() {
 	os.Exit(1)
 }
 
-func handleVersion(r Repo) {
+func handleVersion(r Repo, dataDir string) {
 	fmt.Printf("maybe %s   entries: %d   %s\n",
 		appVersion, r.Size(), runtime.Version())
+
+	if verbose {
+		fmt.Printf("\nDataDir: %s\n", dataDir)
+	}
 }
 
 func handleShow(r Repo, show string) {
@@ -108,8 +120,13 @@ func handleShow(r Repo, show string) {
 func handleSearch(r Repo, search string) {
 	rf, err := r.Search(search)
 	if err != nil {
-		// no result found
-		return
+		// all okay
+		if err == errNoResult {
+			return
+		}
+		// hell should freez
+		logln(err)
+		os.Exit(2)
 	}
 	fmt.Println(rf.folder.Path)
 }
@@ -119,5 +136,6 @@ func defaultDataDir() string {
 	if err != nil {
 		log.Fatalf("unknown DataDir: %s\n", err)
 	}
-	return user.HomeDir + "/.local/share/maybe"
+	return filepath.Join(user.HomeDir, ".local/share/maybe")
+	// return user.HomeDir + "/.local/share/maybe"
 }

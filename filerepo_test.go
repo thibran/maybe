@@ -2,6 +2,9 @@ package main
 
 import (
 	"errors"
+	"io/ioutil"
+	"log"
+	"os"
 	"testing"
 	"time"
 )
@@ -176,6 +179,21 @@ func TestShow(t *testing.T) {
 		t.Fail()
 	}
 	if a[0].folder.Path != "/home/foo" {
+		t.Fail()
+	}
+}
+
+func TestAdd(t *testing.T) {
+	//verbose = true
+	tmp, err := ioutil.TempFile("", "maybe.data_")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.Remove(tmp.Name())
+	r := NewFileRepo(tmp.Name(), 10)
+	r.Add("/tmp/zot/hot", time.Now())
+	r.Add("/tmp/zot", time.Now())
+	if len(r.m) != 3 {
 		t.Fail()
 	}
 }

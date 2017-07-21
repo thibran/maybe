@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"sync"
 	"time"
 )
@@ -46,15 +47,33 @@ func NewFileRepo(path string, maxEntries int) *FileRepo {
 	}
 }
 
+const osSep = string(os.PathSeparator)
+
 // Add path to repo. If the path is known, the repo data is updated, else
 // a new entry will be created.
 func (r *FileRepo) Add(path string, t time.Time) {
+	segments := strings.Split(path, osSep)
+	len := len(segments)
+	for i := 0; i < len-1; i++ {
+		r.updateOrAddPath(strings.Join(segments[:len-i], osSep), t, i > 0)
+	}
+}
+
+// updateOrAddPath to repository. Sub-folders are added, when unknown, but
+// their timestamps are not updated.
+func (r *FileRepo) updateOrAddPath(path string, t time.Time, subfolder bool) {
 	f, ok := r.m[path]
 	// new folder object
 	if !ok {
+		logln("updateOrAddPath - new folder:", path)
 		r.m[path] = NewFolder(path, 1, Times{t})
 		return
 	}
+	if subfolder {
+		return
+	}
+	logln("updateOrAddPath - update timestamps:", path)
+
 	// update existing folder object
 	f.Count++
 	f.Times = append(f.Times, t)
@@ -67,11 +86,13 @@ func (r *FileRepo) Add(path string, t time.Time) {
 	r.m = RemoveOldestFolders(r.m, r.maxEntries-r.maxEntries/3)
 }
 
+var errNoResult = errors.New("no result")
+
 // Search repo for the key s.
 func (r *FileRepo) Search(query string) (RatedFolder, error) {
 	a := search(r.m, query, func(a RatedFolders) { a.sort() })
 	if len(a) == 0 {
-		return RatedFolder{}, errors.New("no result")
+		return RatedFolder{}, errNoResult
 	}
 	return a[0], nil
 }
