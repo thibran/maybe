@@ -160,7 +160,7 @@ func rateSimilarity(base, s string) uint {
 	runes := []rune(s)
 	searchLen := len(runes)
 	for k, v := range base {
-		if k <= searchLen-1 && v == runes[k] {
+		if k < searchLen && v == runes[k] {
 			continue
 		}
 		diff++
