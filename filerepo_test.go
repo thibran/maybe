@@ -173,6 +173,12 @@ func TestSearch_Repo(t *testing.T) {
 	}
 }
 
+func TestCheckFolder(t *testing.T) {
+	if checkFolder("/tmp/baz_faz/moo") {
+		t.Fail()
+	}
+}
+
 func TestShow(t *testing.T) {
 	a := nowTimeRepo().Show("foo", 2)
 	if len(a) == 0 {

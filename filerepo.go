@@ -91,10 +91,22 @@ var errNoResult = errors.New("no result")
 // Search repo for the key s.
 func (r *FileRepo) Search(query string) (RatedFolder, error) {
 	a := search(r.m, query, func(a RatedFolders) { a.sort() })
-	if len(a) == 0 {
-		return RatedFolder{}, errNoResult
+	for _, v := range a {
+		// keep not found folders, they might re-exist in future
+		if checkFolder(v.folder.Path) {
+			return v, nil
+		}
 	}
-	return a[0], nil
+	return RatedFolder{}, errNoResult
+}
+
+// checkFolder returns true if the path points to a folder which exists.
+func checkFolder(path string) bool {
+	if strings.TrimSpace(path) == "" {
+		return false
+	}
+	fi, err := os.Stat(path)
+	return !(os.IsNotExist(err) || !fi.IsDir())
 }
 
 // Show returns n RatedFolders.

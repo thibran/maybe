@@ -16,7 +16,7 @@ import (
 //   ignore .git folders by default
 
 // TODO:
-// don't show non-existent results
+// compress gob file
 
 // TODO:
 //   better recognize words in the middle like 'aaa' in 'b_aaa_c'!
