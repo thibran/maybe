@@ -179,6 +179,17 @@ func TestCheckFolder(t *testing.T) {
 	}
 }
 
+func TestSave(t *testing.T) {
+	// verbose = true
+	tmp, err := ioutil.TempFile("", "maybe.data_")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.Remove(tmp.Name())
+	r := NewFileRepo(tmp.Name(), 10)
+	r.Save()
+}
+
 func TestShow(t *testing.T) {
 	a := nowTimeRepo().Show("foo", 2)
 	if len(a) == 0 {

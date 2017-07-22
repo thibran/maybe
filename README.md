@@ -9,14 +9,21 @@ To search, create a fish-function with `funced m` and insert:
 ```
 function m
   if [ "$argv[1]" = "" ]
-  clear; and cd $HOME
-  return $status
-end
+    clear
+    if [ $PWD != $HOME ]
+      cd $HOME
+    end
+    return $status
+  end
+
   set d (maybe --search $argv)
-  if [ "$status" = 0 ]
-    clear; and cd $d
+  if [ $status = 0 ]
+    clear
+    if [ $d != $PWD ]
+      cd $d
+    end
   else
-    return 1
+    return 2
   end
 end
 ```

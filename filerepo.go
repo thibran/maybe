@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"compress/gzip"
 	"encoding/gob"
 	"errors"
 	"fmt"
@@ -190,13 +192,23 @@ func collectResults(c <-chan RatedFolder, sort sorterFn) RatedFolders {
 
 // Save repo map to dataPath.
 func (r *FileRepo) Save() error {
-	f, err := os.Create(r.dataPath)
+	return saveGzip(r.dataPath, r.m)
+}
+
+func saveGzip(path string, data map[string]Folder) error {
+	f, err := os.Create(path)
 	if err != nil {
-		log.Fatalf("could not save filerepo: %s %v\n", r.dataPath, err)
+		log.Fatalf("could not save filerepo: %s %v\n", path, err)
 	}
 	defer f.Close()
-	enc := gob.NewEncoder(f)
-	enc.Encode(r.m)
+
+	var b bytes.Buffer
+	enc := gob.NewEncoder(&b)
+	enc.Encode(data)
+
+	w := gzip.NewWriter(f)
+	defer w.Close()
+	w.Write(b.Bytes())
 	return nil
 }
 
@@ -204,18 +216,33 @@ var errNoFile = fmt.Errorf("file not found")
 
 // Load repo map from dataPath.
 func (r *FileRepo) Load() error {
-	f, err := os.Open(r.dataPath)
+	m, err := loadGzip(r.dataPath)
 	if err != nil {
-		return errNoFile
-	}
-	defer f.Close()
-	var m map[string]Folder
-	dec := gob.NewDecoder(f)
-	if err := dec.Decode(&m); err != nil {
-		return fmt.Errorf("can not decode: %s %v", r.dataPath, err)
+		return err
 	}
 	r.m = m
 	return nil
+}
+
+func loadGzip(path string) (map[string]Folder, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, errNoFile
+	}
+	defer f.Close()
+
+	r, err := gzip.NewReader(f)
+	defer r.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	var m map[string]Folder
+	dec := gob.NewDecoder(r)
+	if err := dec.Decode(&m); err != nil {
+		return nil, fmt.Errorf("can not decode: %s %v", path, err)
+	}
+	return m, nil
 }
 
 // Size of the repository.

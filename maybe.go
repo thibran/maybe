@@ -13,7 +13,7 @@ import (
 )
 
 // TODO:
-//   compress gob file
+//   exact match should win over containig match: timer_c vs timer_cc
 
 // TODO:
 //   initial start, add $HOME folders, $PATH, $TMP...
@@ -40,8 +40,11 @@ type pref struct {
 }
 
 func parse() pref {
+	userHome := userHome()
+	dataDir := filepath.Join(userHome, ".local/share/maybe")
+
 	var p pref
-	flag.StringVar(&p.dataDir, "datadir", defaultDataDir(), "")
+	flag.StringVar(&p.dataDir, "datadir", dataDir, "")
 	flag.StringVar(&p.add, "add", "", "add path to maybe index")
 	flag.StringVar(&p.search, "search", "", "search for keyword")
 	flag.StringVar(&p.show, "show", "", "show results for keyword")
@@ -131,11 +134,10 @@ func handleSearch(r Repo, search string) {
 	fmt.Println(rf.folder.Path)
 }
 
-func defaultDataDir() string {
+func userHome() string {
 	user, err := user.Current()
 	if err != nil {
-		log.Fatalf("unknown DataDir: %s\n", err)
+		log.Fatalf("current user unknown: %v\n", err)
 	}
-	return filepath.Join(user.HomeDir, ".local/share/maybe")
-	// return user.HomeDir + "/.local/share/maybe"
+	return user.HomeDir
 }
