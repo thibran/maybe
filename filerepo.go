@@ -157,7 +157,6 @@ func search(m map[string]Folder, query string, sort sorterFn) RatedFolders {
 	for i := 0; i < workers; i++ {
 		go func() {
 			for folder := range tasks {
-				// for _, f := range m {
 				rf := NewRatedFolder(folder, query)
 				if rf.points() == noMatch {
 					continue

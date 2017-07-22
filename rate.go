@@ -25,7 +25,8 @@ const (
 
 	strEquals          = 160
 	strEqualsWrongCase = 80
-	strStartsEndsWith  = 60
+	strStartsWith      = 70
+	strEndsWith        = 60
 	strContains        = 40
 	strSimilar         = 20
 	noMatch            = 0
@@ -129,10 +130,15 @@ func rateSimilarity(base, s string) uint {
 		l("strEqualsWrongCase:", strEqualsWrongCase)
 		return strEqualsWrongCase
 	}
-	// starts or ends with
-	if strings.HasPrefix(base, s) || strings.HasSuffix(base, s) {
-		l("strStartsEndsWith:", strStartsEndsWith)
-		return strStartsEndsWith
+	// starts with
+	if strings.HasPrefix(base, s) {
+		l("strStartsWith:", strStartsWith)
+		return strStartsWith
+	}
+	// ends with
+	if strings.HasSuffix(base, s) {
+		l("strEndsWith:", strEndsWith)
+		return strEndsWith
 	}
 	// does base even contain s?
 	if strings.Contains(base, s) {

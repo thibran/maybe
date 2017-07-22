@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func testSimilarity(t *testing.T, base, s string, exp uint) uint {
+func similarity(t *testing.T, base, s string, exp uint) uint {
 	n := rateSimilarity(base, s)
 	if n != exp {
 		t.Fail()
@@ -14,34 +14,34 @@ func testSimilarity(t *testing.T, base, s string, exp uint) uint {
 }
 
 func TestRateSimilarity_quals(t *testing.T) {
-	testSimilarity(t, "foo", "foo", strEquals)
+	similarity(t, "foo", "foo", strEquals)
 }
 
 func TestRateSimilarity_wrongCase(t *testing.T) {
-	testSimilarity(t, "Foo", "foo", strEqualsWrongCase)
+	similarity(t, "Foo", "foo", strEqualsWrongCase)
 }
 
 func TestRateSimilarity_noMatch(t *testing.T) {
-	testSimilarity(t, "foo", "Bar", noMatch)
+	similarity(t, "foo", "Bar", noMatch)
 }
 
 func TestRateSimilarity_startsWith(t *testing.T) {
-	testSimilarity(t, "foobar", "foo", strStartsEndsWith)
+	similarity(t, "foobar", "foo", strStartsWith)
 }
 
 func TestRateSimilarity_endsWith(t *testing.T) {
-	testSimilarity(t, "superfoo", "foo", strStartsEndsWith)
+	similarity(t, "superfoo", "foo", strEndsWith)
 }
 
 func TestRateSimilarity_contains(t *testing.T) {
-	testSimilarity(t, "nfooD", "foo", strContains)
+	similarity(t, "nfooD", "foo", strContains)
 }
 
 func TestRateSimilarity_similar(t *testing.T) {
-	testSimilarity(t, "Bar", "bao", strSimilar)
-	testSimilarity(t, "Bar", "bart", strSimilar)
-	testSimilarity(t, "tmp", "timer", noMatch)
-	testSimilarity(t, "pubip", "book", noMatch)
+	similarity(t, "Bar", "bao", strSimilar)
+	similarity(t, "Bar", "bart", strSimilar)
+	similarity(t, "tmp", "timer", noMatch)
+	similarity(t, "pubip", "book", noMatch)
 }
 
 func testTime(t *testing.T, now, t1 time.Time, exp uint) uint {

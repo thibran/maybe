@@ -12,13 +12,6 @@ import (
 	"time"
 )
 
-// TODO:
-//   initial start, add $HOME folders, $PATH, $TMP...
-
-// TODO:
-//   better recognize words in the middle like 'aaa' in 'b_aaa_c'!
-//   don't show result if under a certain limit
-
 const (
 	appVersion    = "0.2.6"
 	maxEntries    = 200
