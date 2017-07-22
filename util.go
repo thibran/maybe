@@ -4,6 +4,12 @@ import (
 	"fmt"
 )
 
+func logf(format string, a ...interface{}) {
+	if verbose {
+		fmt.Printf(format, a...)
+	}
+}
+
 func logln(a ...interface{}) {
 	if verbose {
 		fmt.Println(a...)

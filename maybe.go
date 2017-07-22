@@ -8,15 +8,15 @@ import (
 	"os/user"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"time"
 )
 
 // TODO:
-//   allow user to ignore directories or names
-//   ignore .git folders by default
+//   compress gob file
 
 // TODO:
-// compress gob file
+//   initial start, add $HOME folders, $PATH, $TMP...
 
 // TODO:
 //   better recognize words in the middle like 'aaa' in 'b_aaa_c'!
@@ -75,7 +75,7 @@ func main() {
 		os.Exit(0)
 	}
 	// add path
-	if len(p.add) != 0 {
+	if strings.TrimSpace(p.add) != "" {
 		r.Add(p.add, time.Now())
 		if err := r.Save(); err != nil {
 			log.Fatalf("main - add path: %s\n", err)

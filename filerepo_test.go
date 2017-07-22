@@ -203,3 +203,20 @@ func TestAdd(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestAdd_ignoreFolders(t *testing.T) {
+	// verbose = true
+	tmp, err := ioutil.TempFile("", "maybe.data_")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.Remove(tmp.Name())
+	r := NewFileRepo(tmp.Name(), 10)
+	r.Add("/tmp/.git", time.Now())
+	if _, ok := r.m["/tmp"]; !ok {
+		t.Fail()
+	}
+	if len(r.m) != 1 {
+		t.Fail()
+	}
+}

@@ -47,6 +47,8 @@ func NewFileRepo(path string, maxEntries int) *FileRepo {
 	}
 }
 
+var ignoreSlice = []string{".git", ".hg", ".svn", ".bzr"}
+
 const osSep = string(os.PathSeparator)
 
 // Add path to repo. If the path is known, the repo data is updated, else
@@ -54,8 +56,18 @@ const osSep = string(os.PathSeparator)
 func (r *FileRepo) Add(path string, t time.Time) {
 	segments := strings.Split(path, osSep)
 	len := len(segments)
+
+Loop:
 	for i := 0; i < len-1; i++ {
-		r.updateOrAddPath(strings.Join(segments[:len-i], osSep), t, i > 0)
+		path = strings.Join(segments[:len-i], osSep)
+		// check if folder is in the ignore list
+		for _, ign := range ignoreSlice {
+			if segments[len-1-i] == ign {
+				logf("Add - ignore: %s\n", path)
+				continue Loop
+			}
+		}
+		r.updateOrAddPath(path, t, i > 0)
 	}
 }
 
