@@ -13,9 +13,6 @@ import (
 )
 
 // TODO:
-//   exact match should win over containig match: timer_c vs timer_cc
-
-// TODO:
 //   initial start, add $HOME folders, $PATH, $TMP...
 
 // TODO:

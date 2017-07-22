@@ -23,7 +23,7 @@ const (
 	timeLessThanYear        = 6
 	timeOlderThanAYear      = 3
 
-	strEquals          = 100
+	strEquals          = 160
 	strEqualsWrongCase = 80
 	strStartsEndsWith  = 60
 	strContains        = 40
