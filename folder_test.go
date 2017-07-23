@@ -53,7 +53,7 @@ func TestSort(t *testing.T) {
 
 func dummy() RatedTimeFolders {
 	fn := func(p string, t time.Time) RatedFolder {
-		return NewRatedFolder(NewFolder(p, 1, Times{t}), "")
+		return NewRatedFolder(NewFolder(p, 1, t), "")
 	}
 	now := time.Now()
 	f1 := fn("/home/bar", now.Add(-time.Hour*18))

@@ -13,9 +13,9 @@ import (
 )
 
 const (
-	appVersion    = "0.2.6"
-	maxEntries    = 200
-	minMaxEntries = 30 // minimal value for the maxEntries variable
+	appVersion    = "0.3.0"
+	maxEntries    = 10000
+	minMaxEntries = 200 // minimal value for the maxEntries variable
 )
 
 var verbose = false
@@ -37,9 +37,9 @@ func parse() pref {
 	flag.StringVar(&p.dataDir, "datadir", dataDir, "")
 	flag.StringVar(&p.add, "add", "", "add path to maybe index")
 	flag.StringVar(&p.search, "search", "", "search for keyword")
-	flag.StringVar(&p.show, "show", "", "show results for keyword")
+	flag.StringVar(&p.show, "show", "", "list results for keyword")
 	flag.BoolVar(&p.version, "version", false, "print maybe version")
-	flag.IntVar(&p.maxEntries, "max-entries", maxEntries, "Maximum number of unique path-entries (minimum 30).")
+	flag.IntVar(&p.maxEntries, "max-entries", maxEntries, "Maximum number of unique path-entries.")
 	verb := flag.Bool("v", false, "print verbose info about app execution")
 	flag.Parse()
 	if p.maxEntries < minMaxEntries {
@@ -115,7 +115,7 @@ func handleSearch(r Repo, search string) {
 	if err != nil {
 		// all okay
 		if err == errNoResult {
-			return
+			os.Exit(1)
 		}
 		// hell should freez
 		logln(err)

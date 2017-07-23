@@ -6,12 +6,15 @@ import (
 	"encoding/gob"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"strings"
 	"sync"
 	"time"
 )
+
+var errNoFile = fmt.Errorf("file not found")
 
 // Saver abstracts saving of implementing object.
 type Saver interface {
@@ -80,7 +83,7 @@ func (r *FileRepo) updateOrAddPath(path string, t time.Time, subfolder bool) {
 	// new folder object
 	if !ok {
 		logln("updateOrAddPath - new folder:", path)
-		r.m[path] = NewFolder(path, 1, Times{t})
+		r.m[path] = NewFolder(path, 1, t)
 		return
 	}
 	if subfolder {
@@ -93,10 +96,11 @@ func (r *FileRepo) updateOrAddPath(path string, t time.Time, subfolder bool) {
 	f.Times = append(f.Times, t)
 	f.Times = f.Times.sort() // sort and keep only data.MaxTimesEntries
 	r.m[path] = f
-	// remove oldest File entries if necessary
+	// guarantee folder limit holds
 	if len(r.m) <= r.maxEntries {
 		return
 	}
+	// remove oldest entries
 	r.m = RemoveOldestFolders(r.m, r.maxEntries-r.maxEntries/3)
 }
 
@@ -121,15 +125,6 @@ func checkFolder(path string) bool {
 	}
 	fi, err := os.Stat(path)
 	return !(os.IsNotExist(err) || !fi.IsDir())
-}
-
-// Show returns n RatedFolders.
-func (r *FileRepo) Show(query string, limit int) RatedFolders {
-	a := search(r.m, query, func(a RatedFolders) { a.sort() })
-	if len(a) < limit {
-		limit = len(a)
-	}
-	return a[0:limit]
 }
 
 type sorterFn func(a RatedFolders)
@@ -169,6 +164,15 @@ func search(m map[string]Folder, query string, sort sorterFn) RatedFolders {
 	return collectResults(results, sort)
 }
 
+// Show returns n RatedFolders.
+func (r *FileRepo) Show(query string, limit int) RatedFolders {
+	a := search(r.m, query, func(a RatedFolders) { a.sort() })
+	if len(a) < limit {
+		limit = len(a)
+	}
+	return a[0:limit]
+}
+
 func createTasks(m map[string]Folder) <-chan Folder {
 	tasks := make(chan Folder)
 	go func() {
@@ -191,31 +195,36 @@ func collectResults(c <-chan RatedFolder, sort sorterFn) RatedFolders {
 
 // Save repo map to dataPath.
 func (r *FileRepo) Save() error {
-	return saveGzip(r.dataPath, r.m)
-}
-
-func saveGzip(path string, data map[string]Folder) error {
-	f, err := os.Create(path)
+	f, err := os.Create(r.dataPath)
 	if err != nil {
-		log.Fatalf("could not save filerepo: %s %v\n", path, err)
+		log.Fatalf("could not save filerepo: %s %v\n", r.dataPath, err)
 	}
 	defer f.Close()
+	return saveGzip(f, r.m)
+}
 
+func saveGzip(w io.Writer, data map[string]Folder) error {
 	var b bytes.Buffer
 	enc := gob.NewEncoder(&b)
 	enc.Encode(data)
-
-	w := gzip.NewWriter(f)
-	defer w.Close()
-	w.Write(b.Bytes())
+	wg := gzip.NewWriter(w)
+	defer wg.Close()
+	wg.Write(b.Bytes())
 	return nil
 }
 
-var errNoFile = fmt.Errorf("file not found")
-
 // Load repo map from dataPath.
 func (r *FileRepo) Load() error {
-	m, err := loadGzip(r.dataPath)
+	f, err := os.Open(r.dataPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return errNoFile
+		}
+		return err
+	}
+	defer f.Close()
+
+	m, err := loadGzip(f)
 	if err != nil {
 		return err
 	}
@@ -223,23 +232,16 @@ func (r *FileRepo) Load() error {
 	return nil
 }
 
-func loadGzip(path string) (map[string]Folder, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, errNoFile
-	}
-	defer f.Close()
-
-	r, err := gzip.NewReader(f)
-	defer r.Close()
+func loadGzip(r io.Reader) (map[string]Folder, error) {
+	gr, err := gzip.NewReader(r)
+	defer gr.Close()
 	if err != nil {
 		return nil, err
 	}
-
 	var m map[string]Folder
-	dec := gob.NewDecoder(r)
+	dec := gob.NewDecoder(gr)
 	if err := dec.Decode(&m); err != nil {
-		return nil, fmt.Errorf("can not decode: %s %v", path, err)
+		return nil, fmt.Errorf("can not decode: %v", err)
 	}
 	return m, nil
 }

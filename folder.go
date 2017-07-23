@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"path"
 	"sort"
 	"strings"
@@ -16,12 +17,31 @@ type Folder struct {
 }
 
 // NewFolder object.
-func NewFolder(path string, count uint, times Times) Folder {
+func NewFolder(path string, count uint, times ...time.Time) Folder {
+	if len(times) == 0 {
+		log.Fatal("NewFolder - must have at last one []time entry")
+	}
 	return Folder{
 		Path:  path,
 		Count: count,
 		Times: times,
 	}
+}
+
+// Times is a shorthand for a time slice.
+type Times []time.Time
+
+// MaxTimeEntries of time.Time entries in a Times slice.
+const MaxTimeEntries = 6
+
+// sort time entries and cut all entries longer than MaxTimesEntries.
+func (t Times) sort() Times {
+
+	sort.Slice(t, func(i, j int) bool { return t[i].After(t[j]) })
+	if len(t) > MaxTimeEntries {
+		return t[:MaxTimeEntries]
+	}
+	return t
 }
 
 // RatedFolder object.
@@ -109,19 +129,4 @@ func (a RatedTimeFolders) sort() {
 		}
 		return a[i].timePoints > a[j].timePoints
 	})
-}
-
-// MaxTimesEntries of time.Time entries in a Times slice.
-const MaxTimesEntries = 6
-
-// Times is a shorthand for a time slice.
-type Times []time.Time
-
-// sort time entries and cut all entries longer than MaxTimesEntries.
-func (t Times) sort() Times {
-	sort.Slice(t, func(i, j int) bool { return t[i].After(t[j]) })
-	if len(t) > MaxTimesEntries {
-		return t[:MaxTimesEntries]
-	}
-	return t
 }

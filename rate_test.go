@@ -166,14 +166,44 @@ func TestRateTime_olderThanAYear(t *testing.T) {
 
 func TestRate_maxRating(t *testing.T) {
 	s := "foo"
-	now := time.Now().Add(-time.Second * 40)
-	f := NewFolder(
-		"/home/foo",
-		1,
-		Times{now},
-	)
+	f := NewFolder("/home/foo", 1, time.Now().Add(-time.Second*40))
 	n := rate(s, f.Path, f.Times)
 	if n != strEquals+timeLessThanMinute {
 		t.Fail()
 	}
 }
+
+// type Dict []string
+
+// func loadDict() (Dict, error) {
+// 	f, err := os.Open("/usr/share/dict/american")
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	buf, err := ioutil.ReadAll(f)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return strings.Split(string(buf), "\n"), nil
+// }
+
+// func (d Dict) randomPath() string {
+// 	a := []string{"/"}
+// 	for i := 0; i < random(2, 5); i++ {
+// 		a = append(a, d.randomWord())
+// 	}
+// 	return filepath.Join(a...)
+// }
+
+// func (d Dict) randomWord() string {
+// 	len := len(d)
+// 	word := d[random(0, len-1)]
+// 	word = strings.Replace(word, "'", "", -1)
+// 	word = strings.Replace(word, " ", "_", -1)
+// 	return word
+// }
+
+// // random with min inclusive and max exclusive
+// func random(min, max int) int {
+// 	return rand.Intn(max-min) + min
+// }
