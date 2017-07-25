@@ -43,6 +43,7 @@ func parse() pref {
 	verb := flag.Bool("v", false, "print verbose info about app execution")
 	flag.Parse()
 	if p.maxEntries < minMaxEntries {
+		fmt.Printf("p.maxEntries %q too low, set it\n", p.maxEntries) // TODO rm
 		p.maxEntries = minMaxEntries
 	}
 	verbose = *verb

@@ -13,6 +13,13 @@ func similarity(t *testing.T, base, s string, exp uint) uint {
 	return n
 }
 
+func TestRate_noMatch(t *testing.T) {
+	n := rate("aaa", "/home/foo", []time.Time{time.Now()})
+	if n != noMatch {
+		t.Fail()
+	}
+}
+
 func TestRateSimilarity_quals(t *testing.T) {
 	similarity(t, "foo", "foo", strEquals)
 }
@@ -38,10 +45,13 @@ func TestRateSimilarity_contains(t *testing.T) {
 }
 
 func TestRateSimilarity_similar(t *testing.T) {
+	// verbose = true
 	similarity(t, "Bar", "bao", strSimilar)
 	similarity(t, "Bar", "bart", strSimilar)
+	similarity(t, "HubertVomSchuh", "Hub3rtV@mSchu", strSimilar)
 	similarity(t, "tmp", "timer", noMatch)
 	similarity(t, "pubip", "book", noMatch)
+	similarity(t, "tm", "tmp", noMatch)
 }
 
 func testTime(t *testing.T, now, t1 time.Time, exp uint) uint {
@@ -166,7 +176,7 @@ func TestRateTime_olderThanAYear(t *testing.T) {
 
 func TestRate_maxRating(t *testing.T) {
 	s := "foo"
-	f := NewFolder("/home/foo", 1, time.Now().Add(-time.Second*40))
+	f := NewFolder("/home/foo", time.Now().Add(-time.Second*40))
 	n := rate(s, f.Path, f.Times)
 	if n != strEquals+timeLessThanMinute {
 		t.Fail()

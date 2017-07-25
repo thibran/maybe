@@ -16,44 +16,33 @@ func TestSort(t *testing.T) {
 	}
 }
 
-// func TestRate_foo(t *testing.T) {
-// 	s := "foo"
-// 	now := time.Now()
-// 	t1 := now.Add(-time.Second * 40)
-// 	t2 := now.Add(-time.Hour * 18)
-// 	t3 := now.Add(-time.Hour * 24)
-// 	t4 := now.Add(-time.Hour * 24 * 2)
-// 	t5 := now.Add(-time.Hour * 24 * 7 * 2)
-// 	f := &Folder{
-// 		Path:  "/home/foo",
-// 		Count: 1,
-// 		Times: Times{t1, t2, t3, t4, t5},
-// 	}
-// 	n := rate(s, f.Path, f.Times)
-// 	fmt.Println(n)
-// }
-
-// func TestBar(t *testing.T) {
-// 	s := "foo"
-// 	r := nowTimeRepo()
-// 	var a RatedFolders
-// 	for _, f := range r.All() {
-// 		rf := NewRatedFolder(f, s)
-// 		if rf.Points == NoMatch {
-// 			continue
-// 		}
-// 		//fmt.Println("append:", rf.Folder, " points:", rf.Points)
-// 		a = append(a, rf)
-// 	}
-// 	fmt.Println(a)
-// 	fmt.Println("-----------------------------------------------")
-// 	sort.Sort(a)
-// 	fmt.Println(a)
-// }
+func TestNewFolder(t *testing.T) {
+	now := []time.Time{time.Now()}
+	tt := []struct {
+		name  string
+		panic bool
+		path  string
+		times []time.Time
+	}{
+		{name: "okay", panic: false, path: "/foo", times: now},
+		{name: "no time value", panic: true, path: "/foo", times: nil},
+		{name: "empty path", panic: true, path: "", times: now},
+	}
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			defer func() {
+				if err := recover(); err == nil && tc.panic {
+					t.Errorf("%q should not panic", tc.name)
+				}
+			}()
+			NewFolder(tc.path, tc.times...)
+		})
+	}
+}
 
 func dummy() RatedTimeFolders {
 	fn := func(p string, t time.Time) RatedFolder {
-		return NewRatedFolder(NewFolder(p, 1, t), "")
+		return NewRatedFolder(NewFolder(p, t), "")
 	}
 	now := time.Now()
 	f1 := fn("/home/bar", now.Add(-time.Hour*18))
@@ -66,17 +55,48 @@ func TestTimeRatedSort(t *testing.T) {
 	a := dummy()
 	a.sort()
 	if a[0].folder.Path != "/home/foo" {
-		t.Fail()
+		t.Fatal()
 	}
 }
 
 func TestRemoveOldestFolders(t *testing.T) {
-	a := dummy()
-	m := a.removeOldestFolders(2)
-	if len(m) != 2 {
-		t.Fail()
+	setup := func() map[string]Folder {
+		now := time.Now()
+		fn := func(p string, t time.Time) Folder {
+			return NewFolder(p, t)
+		}
+		f1 := fn("/home/bar", now.Add(-time.Hour*18))
+		f2 := fn("/home/zot", now.Add(-time.Hour*4))
+		f3 := fn("/home/foo", now)
+		return map[string]Folder{
+			f1.Path: f1,
+			f2.Path: f2,
+			f3.Path: f3,
+		}
 	}
-	if _, ok := m["/home/bar"]; ok {
-		t.Fail()
+
+	tt := []struct {
+		name       string
+		keepValues int
+		resultLen  int
+		notInMap   string
+	}{
+		{name: "remove oldest", keepValues: 2,
+			resultLen: 2, notInMap: "/home/bar"},
+
+		{name: "no change", keepValues: 10,
+			resultLen: 3, notInMap: "/aaa"},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			res := RemoveOldestFolders(setup(), tc.keepValues)
+			if len(res) != tc.resultLen {
+				t.Fatalf("expected len(res) %d, got %v", tc.keepValues, len(res))
+			}
+			if _, ok := res[tc.notInMap]; ok {
+				t.Fatalf("%s should not be in the map", tc.notInMap)
+			}
+		})
 	}
 }

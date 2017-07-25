@@ -61,14 +61,13 @@ const osSep = string(os.PathSeparator)
 func (r *FileRepo) Add(path string, t time.Time) {
 	segments := strings.Split(path, osSep)
 	len := len(segments)
-
 Loop:
 	for i := 0; i < len-1; i++ {
 		path = strings.Join(segments[:len-i], osSep)
 		// check if folder is in the ignore list
 		for _, ign := range ignoreSlice {
 			if segments[len-1-i] == ign {
-				logf("Add - ignore: %s\n", path)
+				logf("ignore: %s\n", path)
 				continue Loop
 			}
 		}
@@ -82,26 +81,28 @@ func (r *FileRepo) updateOrAddPath(path string, t time.Time, subfolder bool) {
 	f, ok := r.m[path]
 	// new folder object
 	if !ok {
-		logln("updateOrAddPath - new folder:", path)
-		r.m[path] = NewFolder(path, 1, t)
+		var sf string
+		if subfolder {
+			sf = "sub-"
+		}
+		logf("new %sfolder: %q\n", sf, path)
+		r.m[path] = NewFolder(path, t)
+
+		// guarantee folder limit holds
+		if len(r.m) > r.maxEntries {
+			r.m = RemoveOldestFolders(r.m, r.maxEntries-r.maxEntries/3)
+		}
 		return
 	}
+	// update existing folder object
 	if subfolder {
 		return
 	}
-	logln("updateOrAddPath - update timestamps:", path)
-
-	// update existing folder object
+	logln("update timestamps:", path)
 	f.Count++
 	f.Times = append(f.Times, t)
 	f.Times = f.Times.sort() // sort and keep only data.MaxTimesEntries
 	r.m[path] = f
-	// guarantee folder limit holds
-	if len(r.m) <= r.maxEntries {
-		return
-	}
-	// remove oldest entries
-	r.m = RemoveOldestFolders(r.m, r.maxEntries-r.maxEntries/3)
 }
 
 var errNoResult = errors.New("no result")

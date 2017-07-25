@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"path"
 	"strings"
 	"time"
@@ -114,11 +115,11 @@ func rateTime(now, t time.Time) uint {
 	return timeOlderThanAYear
 }
 
-// TODO write startWith endWith checks
 // if len(s) is combined in word -> strContains
 func rateSimilarity(base, s string) uint {
 	l := logWithPrefix("rateSimilarity")
-	l("base:", base, "search for:", s)
+	l(fmt.Sprintf("base: %s, search for: %q", base, s))
+	// l("base:", base, "search for:", s)
 	if base == s {
 		l("strEquals:", strEquals)
 		return strEquals
@@ -142,7 +143,6 @@ func rateSimilarity(base, s string) uint {
 	}
 	// does base even contain s?
 	if strings.Contains(base, s) {
-		// TODO check how much different s is compared to base
 		l("strContains:", strContains)
 		return strContains
 	}

@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"path"
 	"sort"
 	"strings"
@@ -17,13 +16,16 @@ type Folder struct {
 }
 
 // NewFolder object.
-func NewFolder(path string, count uint, times ...time.Time) Folder {
+func NewFolder(path string, times ...time.Time) Folder {
+	if len(path) == 0 {
+		panic("NewFolder - empty path is prohibited")
+	}
 	if len(times) == 0 {
-		log.Fatal("NewFolder - must have at last one []time entry")
+		panic("NewFolder - must have at last one []time entry")
 	}
 	return Folder{
 		Path:  path,
-		Count: count,
+		Count: 1,
 		Times: times,
 	}
 }
@@ -103,8 +105,10 @@ func RemoveOldestFolders(m map[string]Folder, n int) map[string]Folder {
 
 func fromFolderMap(m map[string]Folder) RatedTimeFolders {
 	a := make(RatedTimeFolders, len(m))
+	var i int
 	for _, f := range m {
-		a = append(a, NewRatedFolder(f, ""))
+		a[i] = NewRatedFolder(f, "")
+		i++
 	}
 	return a
 }
