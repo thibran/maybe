@@ -1,18 +1,19 @@
 package main
 
 import (
-	"fmt"
 	"path"
 	"sort"
-	"strings"
 	"time"
 )
 
+// FolderMap type alias
+type FolderMap map[string]Folder
+
 // Folder entry.
 type Folder struct {
-	Path  string
-	Count uint  // counts how often the folder has been updated
-	Times Times // last MaxTimesEntries updates
+	Path        string
+	UpdateCount uint32 // counts how often the folder has been updated
+	Times       Times  // last MaxTimesEntries updates
 }
 
 // NewFolder object.
@@ -24,9 +25,9 @@ func NewFolder(path string, times ...time.Time) Folder {
 		panic("NewFolder - must have at last one []time entry")
 	}
 	return Folder{
-		Path:  path,
-		Count: 1,
-		Times: times,
+		Path:        path,
+		UpdateCount: 1,
+		Times:       times,
 	}
 }
 
@@ -38,7 +39,6 @@ const MaxTimeEntries = 6
 
 // sort time entries and cut all entries longer than MaxTimesEntries.
 func (t Times) sort() Times {
-
 	sort.Slice(t, func(i, j int) bool { return t[i].After(t[j]) })
 	if len(t) > MaxTimeEntries {
 		return t[:MaxTimeEntries]
@@ -48,9 +48,9 @@ func (t Times) sort() Times {
 
 // RatedFolder object.
 type RatedFolder struct {
+	Folder
 	timePoints       uint
 	similarityPoints uint
-	folder           Folder
 }
 
 // points return the points of a rated folder.
@@ -71,25 +71,17 @@ func NewRatedFolder(f Folder, query string) RatedFolder {
 	return RatedFolder{
 		timePoints:       ratePassedTime(f.Times),
 		similarityPoints: rateSimilarity(path.Base(f.Path), query),
-		folder:           f,
+		Folder:           f,
 	}
-}
-
-func (a RatedFolders) String() string {
-	arr := make([]string, len(a))
-	for k, v := range a {
-		arr[k] = fmt.Sprintf("%v  tp: %v  sp: %v",
-			v.folder, v.timePoints, v.similarityPoints)
-	}
-	return strings.Join(arr, "\n")
 }
 
 func (a RatedFolders) sort() {
+	var pi, pj uint
 	sort.Slice(a, func(i, j int) bool {
-		pi := a[i].points()
-		pj := a[j].points()
+		pi = a[i].points()
+		pj = a[j].points()
 		if pi == pj {
-			return a[i].folder.Count > a[j].folder.Count
+			return a[i].UpdateCount > a[j].UpdateCount
 		}
 		return pi > pj
 	})
@@ -99,11 +91,11 @@ func (a RatedFolders) sort() {
 type RatedTimeFolders []RatedFolder
 
 // RemoveOldestFolders from map m, keep newest n entries.
-func RemoveOldestFolders(m map[string]Folder, n int) map[string]Folder {
-	return fromFolderMap(m).removeOldestFolders(n)
+func RemoveOldestFolders(m FolderMap, n int) FolderMap {
+	return fromFolderMap(m).removeOldest(n)
 }
 
-func fromFolderMap(m map[string]Folder) RatedTimeFolders {
+func fromFolderMap(m FolderMap) RatedTimeFolders {
 	a := make(RatedTimeFolders, len(m))
 	var i int
 	for _, f := range m {
@@ -113,15 +105,15 @@ func fromFolderMap(m map[string]Folder) RatedTimeFolders {
 	return a
 }
 
-// removeOldestFolders and keep n entries.
-func (a RatedTimeFolders) removeOldestFolders(n int) map[string]Folder {
+// removeOldest and keep n entries.
+func (a RatedTimeFolders) removeOldest(n int) FolderMap {
 	a.sort()
 	if len(a) > n {
 		a = a[:n]
 	}
-	m := make(map[string]Folder, len(a))
+	m := make(FolderMap, len(a))
 	for _, rf := range a {
-		m[rf.folder.Path] = rf.folder
+		m[rf.Path] = rf.Folder
 	}
 	return m
 }
@@ -129,7 +121,7 @@ func (a RatedTimeFolders) removeOldestFolders(n int) map[string]Folder {
 func (a RatedTimeFolders) sort() {
 	sort.Slice(a, func(i, j int) bool {
 		if a[i].timePoints == a[j].timePoints {
-			return a[i].folder.Count > a[j].folder.Count
+			return a[i].UpdateCount > a[j].UpdateCount
 		}
 		return a[i].timePoints > a[j].timePoints
 	})

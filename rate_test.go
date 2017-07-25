@@ -5,14 +5,6 @@ import (
 	"time"
 )
 
-func similarity(t *testing.T, base, s string, exp uint) uint {
-	n := rateSimilarity(base, s)
-	if n != exp {
-		t.Fail()
-	}
-	return n
-}
-
 func TestRate_noMatch(t *testing.T) {
 	n := rate("aaa", "/home/foo", []time.Time{time.Now()})
 	if n != noMatch {
@@ -20,158 +12,114 @@ func TestRate_noMatch(t *testing.T) {
 	}
 }
 
-func TestRateSimilarity_quals(t *testing.T) {
-	similarity(t, "foo", "foo", strEquals)
-}
-
-func TestRateSimilarity_wrongCase(t *testing.T) {
-	similarity(t, "Foo", "foo", strEqualsWrongCase)
-}
-
-func TestRateSimilarity_noMatch(t *testing.T) {
-	similarity(t, "foo", "Bar", noMatch)
-}
-
-func TestRateSimilarity_startsWith(t *testing.T) {
-	similarity(t, "foobar", "foo", strStartsWith)
-}
-
-func TestRateSimilarity_endsWith(t *testing.T) {
-	similarity(t, "superfoo", "foo", strEndsWith)
-}
-
-func TestRateSimilarity_contains(t *testing.T) {
-	similarity(t, "nfooD", "foo", strContains)
-}
-
-func TestRateSimilarity_similar(t *testing.T) {
+func TestRateSimilarity(t *testing.T) {
 	// verbose = true
-	similarity(t, "Bar", "bao", strSimilar)
-	similarity(t, "Bar", "bart", strSimilar)
-	similarity(t, "HubertVomSchuh", "Hub3rtV@mSchu", strSimilar)
-	similarity(t, "tmp", "timer", noMatch)
-	similarity(t, "pubip", "book", noMatch)
-	similarity(t, "tm", "tmp", noMatch)
-}
+	tt := []struct {
+		name, base, query string
+		exp               uint
+	}{
+		{name: "equals", base: "foo", query: "foo", exp: strEquals},
+		{name: "wrong case", base: "Foo", query: "foo", exp: strEqualsWrongCase},
 
-func testTime(t *testing.T, now, t1 time.Time, exp uint) uint {
-	n := rateTime(now, t1)
-	if n != exp {
-		t.Fail()
+		{name: "no match 1", base: "foo", query: "Bar", exp: noMatch},
+		{name: "no match 2", base: "pubip", query: "book", exp: noMatch},
+		{name: "no match 3", base: "tmp", query: "timer", exp: noMatch},
+		{name: "no match 4", base: "tm", query: "tmp", exp: noMatch},
+
+		{name: "starts with", base: "foobar", query: "foo", exp: strStartsWith},
+		{name: "ends with", base: "superfoo", query: "foo", exp: strEndsWith},
+
+		{name: "contains", base: "nfooD", query: "foo", exp: strContains},
+
+		{name: "similar 1", base: "Bar", query: "bao", exp: strSimilar},
+		{name: "similar 2", base: "Bar", query: "bart", exp: strSimilar},
+		{name: "similar 3", base: "HubertVomSchuh", query: "Hub3rtV@mSchu", exp: strSimilar},
 	}
-	return n
+
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			n := rateSimilarity(tc.base, tc.query)
+			if n != tc.exp {
+				t.Errorf("%s - exp %v, got %v", tc.name, tc.exp, n)
+			}
+		})
+	}
 }
 
-func TestRateTime_lessThanMinute(t *testing.T) {
-	testTime(t,
-		time.Date(2009, time.November, 10, 23, 30, 10, 0, time.UTC),
-		time.Date(2009, time.November, 10, 23, 30, 0, 0, time.UTC),
-		timeLessThanMinute,
-	)
-}
+// TODO test better strContains. Have a look at how
+// different the search query can be and if the current
+// rating is okay.
 
-func TestRateTime_lessThanFiveMinutes(t *testing.T) {
-	testTime(t,
-		time.Date(2009, time.November, 10, 23, 31, 10, 0, time.UTC),
-		time.Date(2009, time.November, 10, 23, 30, 0, 0, time.UTC),
-		timeLessThanFiveMinutes,
-	)
-}
+func TestRateTime(t *testing.T) {
+	tt := []struct {
+		name               string
+		nowTime, otherTime time.Time
+		exp                uint
+	}{
+		{name: "less than a minute", exp: timeLessThanMinute,
+			nowTime:   time.Date(2009, time.November, 10, 23, 30, 10, 0, time.UTC),
+			otherTime: time.Date(2009, time.November, 10, 23, 30, 0, 0, time.UTC)},
 
-func TestRateTime_lessThanHour(t *testing.T) {
-	testTime(t,
-		time.Date(2009, time.November, 10, 23, 0, 10, 0, time.UTC),
-		time.Date(2009, time.November, 10, 22, 30, 0, 0, time.UTC),
-		timeLessThanHour,
-	)
-}
+		{name: "less than five minutes", exp: timeLessThanFiveMinutes,
+			nowTime:   time.Date(2009, time.November, 10, 23, 31, 10, 0, time.UTC),
+			otherTime: time.Date(2009, time.November, 10, 23, 30, 0, 0, time.UTC)},
 
-func TestRateTime_lessThanSixHours(t *testing.T) {
-	testTime(t,
-		time.Date(2009, time.November, 10, 23, 0, 10, 0, time.UTC),
-		time.Date(2009, time.November, 10, 20, 30, 0, 0, time.UTC),
-		timeLessThanSixHours,
-	)
-}
+		{name: "less than an hour", exp: timeLessThanHour,
+			nowTime:   time.Date(2009, time.November, 10, 23, 0, 10, 0, time.UTC),
+			otherTime: time.Date(2009, time.November, 10, 22, 30, 0, 0, time.UTC)},
 
-func TestRateTime_lessThanTwelveHours(t *testing.T) {
-	testTime(t,
-		time.Date(2009, time.November, 10, 12, 0, 10, 0, time.UTC),
-		time.Date(2009, time.November, 10, 01, 30, 0, 0, time.UTC),
-		timeLessThanTwelveHours,
-	)
-}
+		{name: "less than six hours", exp: timeLessThanSixHours,
+			nowTime:   time.Date(2009, time.November, 10, 23, 0, 10, 0, time.UTC),
+			otherTime: time.Date(2009, time.November, 10, 20, 30, 0, 0, time.UTC)},
 
-func TestRateTime_lessThanDay(t *testing.T) {
-	testTime(t,
-		time.Date(2009, time.November, 10, 23, 0, 10, 0, time.UTC),
-		time.Date(2009, time.November, 10, 01, 30, 0, 0, time.UTC),
-		timeLessThanDay,
-	)
-}
+		{name: "less than twelve hours", exp: timeLessThanTwelveHours,
+			nowTime:   time.Date(2009, time.November, 10, 12, 0, 10, 0, time.UTC),
+			otherTime: time.Date(2009, time.November, 10, 01, 30, 0, 0, time.UTC)},
 
-func TestRateTime_lessThanTwoDays(t *testing.T) {
-	testTime(t,
-		time.Date(2009, time.November, 11, 23, 0, 10, 0, time.UTC),
-		time.Date(2009, time.November, 10, 01, 30, 0, 0, time.UTC),
-		timeLessThanTwoDays,
-	)
-}
+		{name: "less than a day", exp: timeLessThanDay,
+			nowTime:   time.Date(2009, time.November, 10, 23, 0, 10, 0, time.UTC),
+			otherTime: time.Date(2009, time.November, 10, 01, 30, 0, 0, time.UTC)},
 
-func TestRateTime_lessThanWeek(t *testing.T) {
-	testTime(t,
-		time.Date(2009, time.November, 12, 23, 0, 10, 0, time.UTC),
-		time.Date(2009, time.November, 10, 01, 30, 0, 0, time.UTC),
-		timeLessThanWeek,
-	)
-}
+		{name: "less than two days", exp: timeLessThanTwoDays,
+			nowTime:   time.Date(2009, time.November, 11, 23, 0, 10, 0, time.UTC),
+			otherTime: time.Date(2009, time.November, 10, 01, 30, 0, 0, time.UTC)},
 
-func TestRateTime_lessThanTwoWeeks(t *testing.T) {
-	testTime(t,
-		time.Date(2009, time.November, 12, 0, 0, 0, 0, time.UTC),
-		time.Date(2009, time.November, 01, 0, 0, 0, 0, time.UTC),
-		timeLessThanTwoWeeks,
-	)
-}
+		{name: "less than a week", exp: timeLessThanWeek,
+			nowTime:   time.Date(2009, time.November, 12, 23, 0, 10, 0, time.UTC),
+			otherTime: time.Date(2009, time.November, 10, 01, 30, 0, 0, time.UTC)},
 
-func TestRateTime_lessThanMonth(t *testing.T) {
-	testTime(t,
-		time.Date(2009, time.December, 1, 0, 0, 0, 0, time.UTC),
-		time.Date(2009, time.November, 12, 0, 0, 0, 0, time.UTC),
-		timeLessThanMonth,
-	)
-}
+		{name: "less than two weeks", exp: timeLessThanTwoWeeks,
+			nowTime:   time.Date(2009, time.November, 12, 0, 0, 0, 0, time.UTC),
+			otherTime: time.Date(2009, time.November, 01, 0, 0, 0, 0, time.UTC)},
 
-func TestRateTime_lessThanTwoMonths(t *testing.T) {
-	testTime(t,
-		time.Date(2009, time.March, 1, 0, 0, 0, 0, time.UTC),
-		time.Date(2009, time.January, 20, 0, 0, 0, 0, time.UTC),
-		timeLessThanTwoMonths,
-	)
-}
+		{name: "less than a month", exp: timeLessThanMonth,
+			nowTime:   time.Date(2009, time.December, 1, 0, 0, 0, 0, time.UTC),
+			otherTime: time.Date(2009, time.November, 12, 0, 0, 0, 0, time.UTC)},
 
-func TestRateTime_lessThanSixMonths(t *testing.T) {
-	testTime(t,
-		time.Date(2009, time.May, 1, 0, 0, 0, 0, time.UTC),
-		time.Date(2009, time.January, 20, 0, 0, 0, 0, time.UTC),
-		timeLessThanSixMonths,
-	)
-}
+		{name: "less than two months", exp: timeLessThanTwoMonths,
+			nowTime:   time.Date(2009, time.March, 1, 0, 0, 0, 0, time.UTC),
+			otherTime: time.Date(2009, time.January, 20, 0, 0, 0, 0, time.UTC)},
 
-func TestRateTime_lessThanYear(t *testing.T) {
-	testTime(t,
-		time.Date(2010, time.January, 1, 0, 0, 0, 0, time.UTC),
-		time.Date(2009, time.February, 1, 0, 0, 0, 0, time.UTC),
-		timeLessThanYear,
-	)
-}
+		{name: "less than six months", exp: timeLessThanSixMonths,
+			nowTime:   time.Date(2009, time.May, 1, 0, 0, 0, 0, time.UTC),
+			otherTime: time.Date(2009, time.January, 20, 0, 0, 0, 0, time.UTC)},
 
-func TestRateTime_olderThanAYear(t *testing.T) {
-	testTime(t,
-		time.Date(2012, time.January, 1, 0, 0, 0, 0, time.UTC),
-		time.Date(2009, time.February, 1, 0, 0, 0, 0, time.UTC),
-		timeOlderThanAYear,
-	)
+		{name: "less than a year", exp: timeLessThanYear,
+			nowTime:   time.Date(2010, time.January, 1, 0, 0, 0, 0, time.UTC),
+			otherTime: time.Date(2009, time.February, 1, 0, 0, 0, 0, time.UTC)},
+
+		{name: "older than a year", exp: timeOlderThanAYear,
+			nowTime:   time.Date(2012, time.January, 1, 0, 0, 0, 0, time.UTC),
+			otherTime: time.Date(2009, time.February, 1, 0, 0, 0, 0, time.UTC)},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			if n := rateTime(tc.nowTime, tc.otherTime); n != tc.exp {
+				t.Errorf("%s - exp %v, got %v", tc.name, tc.exp, n)
+			}
+		})
+	}
 }
 
 func TestRate_maxRating(t *testing.T) {

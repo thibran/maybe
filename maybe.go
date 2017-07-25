@@ -12,8 +12,13 @@ import (
 	"time"
 )
 
+// TODO
+// - multi-word search queries
+// - maybe replace time rating with: fewer seconds from now > better
+//   if a time value is not present, add penalty
+
 const (
-	appVersion    = "0.3.0"
+	appVersion    = "0.3.1"
 	maxEntries    = 10000
 	minMaxEntries = 200 // minimal value for the maxEntries variable
 )
@@ -43,8 +48,10 @@ func parse() pref {
 	verb := flag.Bool("v", false, "print verbose info about app execution")
 	flag.Parse()
 	if p.maxEntries < minMaxEntries {
-		fmt.Printf("p.maxEntries %q too low, set it\n", p.maxEntries) // TODO rm
 		p.maxEntries = minMaxEntries
+	}
+	if strings.TrimSpace(p.dataDir) == "" {
+		log.Fatalf("datadir empty or consists only of whitespace")
 	}
 	verbose = *verb
 	return p
@@ -52,7 +59,7 @@ func parse() pref {
 
 func main() {
 	p := parse()
-	r := NewFileRepo(p.dataDir+"/maybe.data", p.maxEntries)
+	r := NewRepo(p.dataDir+"/maybe.data", p.maxEntries)
 	// load data
 	if err := r.Load(); err != nil {
 		if err != errNoFile {
@@ -91,7 +98,7 @@ func main() {
 	os.Exit(1)
 }
 
-func handleVersion(r Repo, dataDir string) {
+func handleVersion(r *Repo, dataDir string) {
 	fmt.Printf("maybe %s   entries: %d   %s\n",
 		appVersion, r.Size(), runtime.Version())
 
@@ -100,19 +107,19 @@ func handleVersion(r Repo, dataDir string) {
 	}
 }
 
-func handleShow(r Repo, show string) {
+func handleShow(r *Repo, show string) {
 	a := r.Show(show, 10)
 	if len(a) == 0 {
 		return
 	}
 	fmt.Println("Points\tFolder")
 	for _, rf := range a {
-		fmt.Printf("%d\t%s\n", rf.points(), rf.folder.Path)
+		fmt.Printf("%d\t%s\n", rf.points(), rf.Path)
 	}
 }
 
-func handleSearch(r Repo, search string) {
-	rf, err := r.Search(search)
+func handleSearch(r *Repo, search string) {
+	rf, err := r.Search(folderChecker(), search)
 	if err != nil {
 		// all okay
 		if err == errNoResult {
@@ -122,7 +129,7 @@ func handleSearch(r Repo, search string) {
 		logln(err)
 		os.Exit(2)
 	}
-	fmt.Println(rf.folder.Path)
+	fmt.Println(rf.Path)
 }
 
 func userHome() string {

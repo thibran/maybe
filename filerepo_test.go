@@ -4,35 +4,23 @@ import (
 	"bytes"
 	"io/ioutil"
 	"log"
+	"math"
 	"os"
+	"strings"
 	"testing"
 	"time"
 )
 
-var (
-	f1 = NewFolder("/home/foo",
-		time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC),
-	)
-
-	f2 = NewFolder("/home/tux",
-		time.Date(2012, time.February, 3, 11, 30, 0, 0, time.UTC),
-	)
-
-	f3 = NewFolder("/etc/apt",
-		time.Date(2016, time.March, 20, 18, 0, 0, 0, time.UTC),
-	)
-)
-
 func TestAdd_updateExisting(t *testing.T) {
 	// verbose = true
-	r := NewFileRepo("/baz/bar/zot", 10)
+	r := NewRepo("/baz/bar/zot", 10)
 	now := time.Now()
 	folder := NewFolder("/home/foo", time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC))
-	r.m = map[string]Folder{folder.Path: folder}
-	r.Add(f1.Path, now)
+	r.m = FolderMap{folder.Path: folder}
+	r.Add(folder.Path, now)
 
-	f := r.m[f1.Path]
-	if f.Count != 2 {
+	f := r.m[folder.Path]
+	if f.UpdateCount != 2 {
 		t.Fatal()
 	}
 	if f.Times[0] != now {
@@ -45,7 +33,7 @@ func TestAdd_updateExisting(t *testing.T) {
 
 func TestAdd_ignoreFolders(t *testing.T) {
 	// verbose = true
-	r := NewFileRepo("/baz/bar/zot", 10)
+	r := NewRepo("/baz/bar/zot", 10)
 	r.Add("/tmp/.git", time.Now())
 	if _, ok := r.m["/tmp"]; !ok {
 		t.Fatal()
@@ -57,31 +45,52 @@ func TestAdd_ignoreFolders(t *testing.T) {
 
 func TestSearch(t *testing.T) {
 	// verbose = true
+	type path struct {
+		p string
+		t time.Time
+	}
 	now := time.Now()
-	r := NewFileRepo("/baz/bar/zot", 10)
-	r.updateOrAddPath("/home/nfoo", now.Add(-time.Second*40), false)
-	r.updateOrAddPath("/home/foo", now.Add(-time.Hour*18), false)
-	r.updateOrAddPath("/etc/apt", now.Add(-time.Hour*24*7*2), false)
-	a := search(r.m, "foo", func(a RatedFolders) { a.sort() })
-	if len(a) == 0 {
-		t.Fatal()
+	tt := []struct {
+		name, query, exp string
+		paths            []path
+	}{
+		{name: "okay", query: "foo", exp: "/home/foo",
+			paths: []path{
+				{p: "/home/nfoo", t: now.Add(-time.Second * 40)},
+				{p: "/home/foo", t: now.Add(-time.Hour * 18)},
+				{p: "/etc/apt", t: now.Add(-time.Hour * 24)},
+			},
+		},
+		{name: "not found", query: "zzz",
+			paths: []path{
+				{p: "/home/nfoo", t: now.Add(-time.Second * 40)},
+				{p: "/home/foo", t: now.Add(-time.Hour * 18)},
+				{p: "/etc/apt", t: now.Add(-time.Hour * 24)},
+			},
+		},
+		{name: "no map entries", query: "foo"},
 	}
-	if a[0].points() < a[1].points() {
-		t.Fatal()
+	doesExist := func(path string) bool {
+		return strings.TrimSpace(path) != ""
 	}
-	emptyMap := map[string]Folder{}
-	a = search(emptyMap, "foo", func(a RatedFolders) { a.sort() })
-	if len(a) != 0 {
-		t.Fatalf("empty map shoudl return no result, got %v", len(a))
-	}
-}
 
-func TestCheckFolder(t *testing.T) {
-	if checkFolder("/zot/baz_faz/moo") {
-		t.Fatal()
-	}
-	if checkFolder("") {
-		t.Fatal()
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			r := NewRepo("/baz/bar/zot", 10)
+			for _, p := range tc.paths {
+				r.updateOrAddPath(p.p, p.t, false)
+			}
+			rf, err := r.Search(ResourceCheckerFn(doesExist), tc.query)
+			if err != nil && tc.exp != "" {
+				t.Fatalf("exp %q, got %v", tc.exp, err)
+			}
+			if rf.Path != tc.exp {
+				t.Fatalf("exp %q, got %q", tc.exp, rf.Path)
+			}
+			if tc.exp == "" && err != errNoResult {
+				t.Fatalf("should be errNoResult, go %v", err)
+			}
+		})
 	}
 }
 
@@ -92,7 +101,7 @@ func TestSave(t *testing.T) {
 		log.Fatal(err)
 	}
 	defer os.Remove(tmp.Name())
-	r := NewFileRepo(tmp.Name(), 10)
+	r := NewRepo(tmp.Name(), 10)
 	if err := r.Save(); err != nil {
 		t.Fatal(err)
 	}
@@ -105,12 +114,12 @@ func TestLoad(t *testing.T) {
 		log.Fatal(err)
 	}
 	defer os.Remove(tmp.Name())
-	r := NewFileRepo(tmp.Name(), 10)
+	r := NewRepo(tmp.Name(), 10)
 	r.Save()
 	if err := r.Load(); err != nil {
 		t.Fatal(err)
 	}
-	r = NewFileRepo("/zot/foo/abababa/bar", 1)
+	r = NewRepo("/zot/foo/abababa/bar", 1)
 	if err := r.Load(); err != errNoFile {
 		t.Fatal()
 	}
@@ -119,7 +128,7 @@ func TestLoad(t *testing.T) {
 func TestSaveGzip(t *testing.T) {
 	// verbose = true
 	var buf bytes.Buffer
-	m := map[string]Folder{"/foo": NewFolder("/foo", time.Now())}
+	m := FolderMap{"/foo": NewFolder("/foo", time.Now())}
 	if err := saveGzip(&buf, m); err != nil {
 		t.Fatal(err)
 	}
@@ -128,7 +137,7 @@ func TestSaveGzip(t *testing.T) {
 func TestLoadGzip(t *testing.T) {
 	// verbose = true
 	var buf bytes.Buffer
-	m := map[string]Folder{"/foo": NewFolder("/foo", time.Now())}
+	m := FolderMap{"/foo": NewFolder("/foo", time.Now())}
 	saveGzip(&buf, m)
 	m2, err := loadGzip(&buf)
 	if err != nil {
@@ -142,40 +151,73 @@ func TestLoadGzip(t *testing.T) {
 func TestShow(t *testing.T) {
 	// verbose = true
 	now := time.Now()
-	r := NewFileRepo("/baz/bar/zot", 10)
-	r.updateOrAddPath("/home/nfoo", now.Add(-time.Second*40), false)
-	r.updateOrAddPath("/home/foo", now.Add(-time.Hour*18), false)
-	r.updateOrAddPath("/etc/apt", now.Add(-time.Hour*24*7*2), false)
-	a := r.Show("foo", 2)
-	if len(a) != 2 {
-		t.Fatal()
+	type path struct {
+		p string
+		t time.Time
 	}
-	if a[0].folder.Path != "/home/foo" {
-		t.Fatal()
+	paths := []path{
+		{p: "/home/nfoo", t: now.Add(-time.Second)},
+		{p: "/home/foo", t: now.Add(-time.Hour * 10)},
+		{p: "/etc/apt", t: now.Add(-time.Hour * 24)},
+		{p: "/bbbbb/foo", t: now.Add(-time.Hour * 14)},
 	}
-	if a[1].folder.Path != "/home/nfoo" {
-		t.Fatal()
+	tt := []struct {
+		name, exp, query     string
+		index, limit, resLen int
+	}{
+		{name: "okay 1", query: "foo", exp: "/home/foo",
+			index: 0, limit: 2, resLen: 2},
+		{name: "okay 2", query: "foo", exp: "/bbbbb/foo",
+			index: 1, limit: 2, resLen: 2},
+		{name: "no result", query: "foo", exp: "",
+			index: 0, limit: 0, resLen: 0},
+		{name: "one result", query: "apt", exp: "/etc/apt",
+			index: 0, limit: 3, resLen: 1},
+	}
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			r := NewRepo("/baz/bar/zot", 10)
+			for _, p := range paths {
+				r.updateOrAddPath(p.p, p.t, false)
+			}
+			a := r.Show(tc.query, tc.limit)
+			if len(a) != tc.resLen {
+				t.Fatalf("len(a) should be %v, got %v", tc.resLen, len(a))
+			}
+			if tc.exp != "" && a[tc.index].Path != tc.exp {
+				t.Fatalf("should be %q, got %q", tc.exp, a[tc.index].Path)
+			}
+		})
 	}
 }
 
 func TestAdd(t *testing.T) {
 	//verbose = true
-	r := NewFileRepo("/baz/bar/zot", 10)
+	r := NewRepo("/baz/bar/zot", 10)
 	r.Add("/tmp/zot/hot", time.Now())
 	r.Add("/tmp/zot", time.Now())
 	if len(r.m) != 3 {
-		t.Fatalf("len(r.m) shoud be 3, got %v", len(r.m))
+		t.Fatalf("exp 3, got %v", len(r.m))
 	}
 }
 
 func TestUpdateOrAddPath(t *testing.T) {
 	// verbose = true
 	keepEntries := 2
-	r := NewFileRepo("/baz/bar/zot", keepEntries)
+	r := NewRepo("/baz/bar/zot", keepEntries)
 	r.updateOrAddPath("/zot", time.Now(), false)
 	r.updateOrAddPath("/bar", time.Now(), false)
 	r.updateOrAddPath("/foo", time.Now(), false)
 	if len(r.m) != keepEntries {
 		t.Fatalf("expected %d, got %v", keepEntries, len(r.m))
+	}
+	// test f.UpdateCount overflow protection
+	exp := uint32(math.MaxUint32)
+	f := r.m["/zot"]
+	f.UpdateCount = exp
+	r.m["/zot"] = f
+	r.updateOrAddPath("/zot", time.Now(), false)
+	if f = r.m["/zot"]; f.UpdateCount != exp {
+		t.Errorf("UpdateCount should %v, got %v", exp, f.UpdateCount)
 	}
 }

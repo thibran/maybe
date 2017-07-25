@@ -1,6 +1,8 @@
 maybe
 =====
 
+version: 0.3.1
+
 fish shell function
 -------------------
 
