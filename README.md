@@ -38,3 +38,11 @@ function m_on_pwd --on-variable PWD
     maybe -add $PWD
 end
 ```
+
+To check which other query results are known to maybe:
+
+```
+function mm
+        maybe -show $argv
+end
+```

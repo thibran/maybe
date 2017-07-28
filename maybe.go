@@ -13,6 +13,10 @@ import (
 )
 
 // TODO
+// - write fish completion, using --show with a sub-command
+//   http://fishshell.com/docs/current/index.html#completion-own
+//   https://stackoverflow.com/questions/16657803/creating-autocomplete-script-with-sub-commands
+//   https://github.com/fish-shell/fish-shell/issues/1217#issuecomment-31441757
 // - multi-word search queries
 // - maybe replace time rating with: fewer seconds from now > better
 //   if a time value is not present, add penalty
@@ -118,8 +122,13 @@ func handleShow(r *Repo, show string) {
 	}
 }
 
-func handleSearch(r *Repo, search string) {
-	rf, err := r.Search(folderChecker(), search)
+func handleSearch(r *Repo, query string) {
+	// return path-query directly
+	if strings.HasPrefix(query, "/") {
+		fmt.Println(query)
+		return
+	}
+	rf, err := r.Search(folderChecker(), query)
 	if err != nil {
 		// all okay
 		if err == errNoResult {
