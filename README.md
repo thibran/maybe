@@ -3,6 +3,19 @@ maybe
 
 version: 0.3.1
 
+TODO
+====
+
+- -t  by time only
+- -r  remove current dir from index
+- write fish completion, using --show with a sub-command
+   http://fishshell.com/docs/current/index.html#completion-own
+   https://stackoverflow.com/questions/16657803/creating-autocomplete-script-with-sub-commands
+   https://github.com/fish-shell/fish-shell/issues/1217#issuecomment-31441757
+- multi-word search queries
+- maybe replace time rating with: fewer seconds from now > better
+   if a time value is not present, add penalty
+
 fish shell function
 -------------------
 
@@ -43,6 +56,6 @@ To check which other query results are known to maybe:
 
 ```
 function mm
-        maybe -show $argv
+        maybe -list $argv
 end
 ```

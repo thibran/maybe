@@ -10,12 +10,19 @@ import (
 	"log"
 	"math"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
 )
 
-var errNoFile = fmt.Errorf("file not found")
+const osSep = string(os.PathSeparator)
+
+var (
+	ignoreSlice          = []string{".git", ".hg", ".svn", ".bzr"}
+	errWalkMaxDirEntries = fmt.Errorf("max entries reached")
+	errNoFile            = fmt.Errorf("file not found")
+)
 
 // Repo content is saved to the disk.
 type Repo struct {
@@ -33,9 +40,15 @@ func NewRepo(path string, maxEntries int) *Repo {
 	}
 }
 
-var ignoreSlice = []string{".git", ".hg", ".svn", ".bzr"}
-
-const osSep = string(os.PathSeparator)
+// Walk adds directories from root, for count
+// of Repo.maxEntries, osWalker.lvlDeep.
+func (r *Repo) Walk(root string) {
+	w := newOSWalker(r, root)
+	err := filepath.Walk(root, w.toWalkFunc())
+	if err != nil && err != errWalkMaxDirEntries {
+		log.Fatalln(err)
+	}
+}
 
 // Add path to repo. If the path is known, the repo data is updated, else
 // a new entry will be created.
@@ -45,12 +58,9 @@ func (r *Repo) Add(path string, t time.Time) {
 Loop:
 	for i := 0; i < len-1; i++ {
 		path = strings.Join(segments[:len-i], osSep)
-		// check if folder is in the ignore list
-		for _, ign := range ignoreSlice {
-			if segments[len-1-i] == ign {
-				logf("ignore: %s\n", path)
-				continue Loop
-			}
+		if isInIgnoreList(segments[len-1-i]) {
+			logf("ignore: %s\n", path)
+			continue Loop
 		}
 		r.updateOrAddPath(path, t, i > 0)
 	}
@@ -67,7 +77,7 @@ func (r *Repo) updateOrAddPath(path string, t time.Time, subfolder bool) {
 		if subfolder {
 			sf = "sub-"
 		}
-		logf("new %sfolder: %q\n", sf, path)
+		logf("new %sfolder: %s\n", sf, path)
 		r.m[path] = NewFolder(path, t)
 
 		// guarantee folder limit holds

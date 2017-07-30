@@ -5,21 +5,11 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/user"
 	"path/filepath"
 	"runtime"
 	"strings"
 	"time"
 )
-
-// TODO
-// - write fish completion, using --show with a sub-command
-//   http://fishshell.com/docs/current/index.html#completion-own
-//   https://stackoverflow.com/questions/16657803/creating-autocomplete-script-with-sub-commands
-//   https://github.com/fish-shell/fish-shell/issues/1217#issuecomment-31441757
-// - multi-word search queries
-// - maybe replace time rating with: fewer seconds from now > better
-//   if a time value is not present, add penalty
 
 const (
 	appVersion    = "0.3.1"
@@ -29,62 +19,23 @@ const (
 
 var verbose = false
 
-type pref struct {
-	dataDir    string
-	add        string
-	search     string
-	list       string
-	version    bool
-	maxEntries int
-}
-
-func parse() pref {
-	userHome := userHome()
-	dataDir := filepath.Join(userHome, ".local/share/maybe")
-
-	var p pref
-	flag.StringVar(&p.dataDir, "datadir", dataDir, "")
-	flag.StringVar(&p.add, "add", "", "add path to maybe index")
-	flag.StringVar(&p.search, "search", "", "search for keyword")
-	flag.StringVar(&p.list, "list", "", "list results for keyword")
-	flag.BoolVar(&p.version, "version", false, "print maybe version")
-	flag.IntVar(&p.maxEntries, "max-entries", maxEntries, "Maximum number of unique path-entries.")
-	verb := flag.Bool("v", false, "print verbose info about app execution")
-	flag.Parse()
-	if p.maxEntries < minMaxEntries {
-		p.maxEntries = minMaxEntries
-	}
-	if strings.TrimSpace(p.dataDir) == "" {
-		log.Fatalf("datadir empty or consists only of whitespace")
-	}
-	verbose = *verb
-	return p
-}
-
 func main() {
 	p := parse()
-	r := NewRepo(p.dataDir+"/maybe.data", p.maxEntries)
-	// load data
-	if err := r.Load(); err != nil {
-		if err != errNoFile {
-			log.Fatalln(err)
-		}
-		// create data dir, if not existent
-		if err := os.MkdirAll(p.dataDir, 0770); err != nil {
-			log.Fatalf("main - create data dir: %s\n", err)
-		}
-	}
+	r := NewRepo(filepath.Join(p.dataDir, "maybe.data"), p.maxEntries)
+	loadData(r, p.dataDir)
 	// version
 	if p.version {
 		handleVersion(r, p.dataDir)
-		os.Exit(0)
+		return
+	}
+	// init
+	if p.init {
+		handleInit(r, p.homeDir)
+		return
 	}
 	// add path
-	if strings.TrimSpace(p.add) != "" {
-		r.Add(p.add, time.Now())
-		if err := r.Save(); err != nil {
-			log.Fatalf("main - add path: %s\n", err)
-		}
+	if p.add != "" {
+		handleAdd(r, p.add)
 		return
 	}
 	// search
@@ -92,7 +43,7 @@ func main() {
 		handleSearch(r, p.search)
 		return
 	}
-	// show
+	// list
 	if len(p.list) != 0 {
 		handleList(r, p.list)
 		return
@@ -102,12 +53,41 @@ func main() {
 	os.Exit(1)
 }
 
+func loadData(r *Repo, dataDir string) {
+	if err := r.Load(); err != nil {
+		if err != errNoFile {
+			log.Fatalln(err)
+		}
+		// create data dir, if not existent
+		if err := os.MkdirAll(dataDir, 0770); err != nil {
+			log.Fatalf("main - create data dir: %s\n", err)
+		}
+	}
+}
+
 func handleVersion(r *Repo, dataDir string) {
 	fmt.Printf("maybe %s   entries: %d   %s\n",
 		appVersion, r.Size(), runtime.Version())
 
 	if verbose {
 		fmt.Printf("\nDataDir: %s\n", dataDir)
+	}
+}
+
+func handleInit(r *Repo, homeDir string) {
+	r.Walk(homeDir)
+	if err := r.Save(); err != nil {
+		log.Fatalf("handleInit failed with: %v\n", err)
+	}
+}
+
+func handleAdd(r *Repo, path string) {
+	if strings.TrimSpace(path) == "" {
+		return
+	}
+	r.Add(path, time.Now())
+	if err := r.Save(); err != nil {
+		log.Fatalf("handleAdd - path: %s\n", err)
 	}
 }
 
@@ -139,12 +119,4 @@ func handleSearch(r *Repo, query string) {
 		os.Exit(2)
 	}
 	fmt.Println(rf.Path)
-}
-
-func userHome() string {
-	user, err := user.Current()
-	if err != nil {
-		log.Fatalf("current user unknown: %v\n", err)
-	}
-	return user.HomeDir
 }
