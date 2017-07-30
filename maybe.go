@@ -33,7 +33,7 @@ type pref struct {
 	dataDir    string
 	add        string
 	search     string
-	show       string
+	list       string
 	version    bool
 	maxEntries int
 }
@@ -46,7 +46,7 @@ func parse() pref {
 	flag.StringVar(&p.dataDir, "datadir", dataDir, "")
 	flag.StringVar(&p.add, "add", "", "add path to maybe index")
 	flag.StringVar(&p.search, "search", "", "search for keyword")
-	flag.StringVar(&p.show, "show", "", "list results for keyword")
+	flag.StringVar(&p.list, "list", "", "list results for keyword")
 	flag.BoolVar(&p.version, "version", false, "print maybe version")
 	flag.IntVar(&p.maxEntries, "max-entries", maxEntries, "Maximum number of unique path-entries.")
 	verb := flag.Bool("v", false, "print verbose info about app execution")
@@ -93,8 +93,8 @@ func main() {
 		return
 	}
 	// show
-	if len(p.show) != 0 {
-		handleShow(r, p.show)
+	if len(p.list) != 0 {
+		handleList(r, p.list)
 		return
 	}
 	fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
@@ -111,7 +111,7 @@ func handleVersion(r *Repo, dataDir string) {
 	}
 }
 
-func handleShow(r *Repo, show string) {
+func handleList(r *Repo, show string) {
 	a := r.Show(show, 10)
 	if len(a) == 0 {
 		return
