@@ -51,24 +51,24 @@ func TestSearch(t *testing.T) {
 	}
 	now := time.Now()
 	tt := []struct {
-		name, query, exp string
-		paths            []path
+		name, search, exp string
+		paths             []path
 	}{
-		{name: "okay", query: "foo", exp: "/home/foo",
+		{name: "okay", search: "foo", exp: "/home/foo",
 			paths: []path{
 				{p: "/home/nfoo", t: now.Add(-time.Second * 40)},
 				{p: "/home/foo", t: now.Add(-time.Hour * 18)},
 				{p: "/etc/apt", t: now.Add(-time.Hour * 24)},
 			},
 		},
-		{name: "not found", query: "zzz",
+		{name: "not found", search: "zzz",
 			paths: []path{
 				{p: "/home/nfoo", t: now.Add(-time.Second * 40)},
 				{p: "/home/foo", t: now.Add(-time.Hour * 18)},
 				{p: "/etc/apt", t: now.Add(-time.Hour * 24)},
 			},
 		},
-		{name: "no map entries", query: "foo"},
+		{name: "no map entries", search: "foo"},
 	}
 	doesExist := func(path string) bool {
 		return strings.TrimSpace(path) != ""
@@ -80,7 +80,8 @@ func TestSearch(t *testing.T) {
 			for _, p := range tc.paths {
 				r.updateOrAddPath(p.p, p.t, false)
 			}
-			rf, err := r.Search(ResourceCheckerFn(doesExist), tc.query)
+			rf, err := r.Search(ResourceCheckerFn(
+				doesExist), query{last: tc.search})
 			if err != nil && tc.exp != "" {
 				t.Fatalf("exp %q, got %v", tc.exp, err)
 			}
@@ -148,7 +149,7 @@ func TestLoadGzip(t *testing.T) {
 	}
 }
 
-func TestShow(t *testing.T) {
+func TestList(t *testing.T) {
 	// verbose = true
 	now := time.Now()
 	type path struct {
@@ -162,16 +163,16 @@ func TestShow(t *testing.T) {
 		{p: "/bbbbb/foo", t: now.Add(-time.Hour * 14)},
 	}
 	tt := []struct {
-		name, exp, query     string
+		name, exp, search    string
 		index, limit, resLen int
 	}{
-		{name: "okay 1", query: "foo", exp: "/home/foo",
+		{name: "okay 1", search: "foo", exp: "/home/foo",
 			index: 0, limit: 2, resLen: 2},
-		{name: "okay 2", query: "foo", exp: "/bbbbb/foo",
+		{name: "okay 2", search: "foo", exp: "/bbbbb/foo",
 			index: 1, limit: 2, resLen: 2},
-		{name: "no result", query: "foo", exp: "",
+		{name: "no result", search: "foo", exp: "",
 			index: 0, limit: 0, resLen: 0},
-		{name: "one result", query: "apt", exp: "/etc/apt",
+		{name: "one result", search: "apt", exp: "/etc/apt",
 			index: 0, limit: 3, resLen: 1},
 	}
 	for _, tc := range tt {
@@ -180,7 +181,7 @@ func TestShow(t *testing.T) {
 			for _, p := range paths {
 				r.updateOrAddPath(p.p, p.t, false)
 			}
-			a := r.Show(tc.query, tc.limit)
+			a := r.List(query{last: tc.search}, tc.limit)
 			if len(a) != tc.resLen {
 				t.Fatalf("len(a) should be %v, got %v", tc.resLen, len(a))
 			}
@@ -219,5 +220,36 @@ func TestUpdateOrAddPath(t *testing.T) {
 	r.updateOrAddPath("/zot", time.Now(), false)
 	if f = r.m["/zot"]; f.UpdateCount != exp {
 		t.Errorf("UpdateCount should %v, got %v", exp, f.UpdateCount)
+	}
+}
+
+func TestFilterInPathOf(t *testing.T) {
+	now := time.Now()
+	newFolder := func(p string) Folder { return NewFolder(p, now) }
+	a := RatedFolders{
+		{Folder: newFolder("/bar/src/foo")},
+		{Folder: newFolder("/bar/no/foo")},
+		{Folder: newFolder("/baz/zot/foo")},
+	}
+	tt := []struct {
+		name, start, exp string
+		len              int
+	}{
+		{name: "ok 1", start: "src", exp: "/bar/src/foo", len: 1},
+		{name: "ok 2", start: "baz", exp: "/baz/zot/foo", len: 1},
+		{name: "empty", start: " ", len: 3},
+		{name: "not in path", start: "cat", len: 0},
+		{name: "search for last segment", start: "foo", len: 0},
+	}
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			res := filterInPathOf(a, tc.start)
+			if len(res) != tc.len {
+				t.Fail()
+			}
+			if tc.exp != "" && res[0].Path != tc.exp {
+				t.Errorf("%s - exp %v, got %v", tc.name, tc.exp, res[0].Path)
+			}
+		})
 	}
 }

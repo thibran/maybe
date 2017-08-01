@@ -24,7 +24,7 @@ const (
 	timeLessThanYear        = 6
 	timeOlderThanAYear      = 3
 
-	strEquals          = 160
+	strEquals          = 200 // 160
 	strEqualsWrongCase = 80
 	strStartsWith      = 70
 	strEndsWith        = 60

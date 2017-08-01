@@ -46,10 +46,6 @@ func TestRateSimilarity(t *testing.T) {
 	}
 }
 
-// TODO test better strContains. Have a look at how
-// different the search query can be and if the current
-// rating is okay.
-
 func TestRateTime(t *testing.T) {
 	tt := []struct {
 		name               string

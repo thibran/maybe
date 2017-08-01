@@ -14,11 +14,21 @@ type pref struct {
 	dataDir    string
 	homeDir    string
 	add        string
-	search     string
-	list       string
+	search     query
+	list       query
 	init       bool
 	version    bool
 	maxEntries int
+}
+
+type query struct {
+	start, last string
+}
+
+func (q *query) isNotEmpty() bool { return len(q.last) > 0 }
+
+func (q query) String() string {
+	return fmt.Sprintf("{start: %s  last: %s}", q.start, q.last)
 }
 
 func parse() pref {
@@ -29,15 +39,30 @@ func parse() pref {
 	p.homeDir = homeDir
 	flagDatadirVar(&p.dataDir, "datadir", dataDir, "")
 	flag.StringVar(&p.add, "add", "", "add path to index")
-	flag.StringVar(&p.search, "search", "", "search for keyword")
-	flag.StringVar(&p.list, "list", "", "list results for keyword")
+	q := flag.String("search", "", "search for keyword")
+	l := flag.String("list", "", "list results for keyword")
 	flag.BoolVar(&p.init, "init", false, "scan $HOME and add folders (six folder-level deep)")
 	flag.BoolVar(&p.version, "version", false, "print maybe version")
 	flagMaxentriesVar(&p.maxEntries, "max-entries", maxEntries, "maximum unique path-entries")
 	verb := flag.Bool("v", false, "verbose")
 	flag.Parse()
+
+	p.search = queryFrom(*q)
+	p.list = queryFrom(*l)
+
 	verbose = *verb
 	return p
+}
+
+func queryFrom(s string) query {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return query{}
+	}
+	if arg := flag.Args(); len(arg) > 0 {
+		return query{start: s, last: arg[0]}
+	}
+	return query{last: s}
 }
 
 func userHome() string {

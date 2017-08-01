@@ -48,6 +48,9 @@ func (r *Repo) Walk(root string) {
 	if err != nil && err != errWalkMaxDirEntries {
 		log.Fatalln(err)
 	}
+	if tmp := os.TempDir(); tmp != "" {
+		r.updateOrAddPath(tmp, w.now, true)
+	}
 }
 
 // Add path to repo. If the path is known, the repo data is updated, else
@@ -115,9 +118,9 @@ func (fn ResourceCheckerFn) doesExist(path string) bool {
 }
 
 // Search repo for query.
-func (r *Repo) Search(ch ResourceChecker, query string) (RatedFolder, error) {
-	a := search(r.m, query, func(a RatedFolders) { a.sort() })
-	for _, v := range a {
+func (r *Repo) Search(ch ResourceChecker, q query) (RatedFolder, error) {
+	a := search(r.m, q.last, func(a RatedFolders) { a.sort() })
+	for _, v := range filterInPathOf(a, q.start) {
 		// keep not found folders, they might re-exist in future
 		if ch.doesExist(v.Path) {
 			// if checkFolder(v.folder.Path) {
@@ -125,6 +128,27 @@ func (r *Repo) Search(ch ResourceChecker, query string) (RatedFolder, error) {
 		}
 	}
 	return RatedFolder{}, errNoResult
+}
+
+// filterInPathOf returns a slice of entries where the path
+// contains the start-string in the non-last segment.
+// When start is empty, the input is returned as-is.
+func filterInPathOf(a RatedFolders, start string) RatedFolders {
+	start = strings.TrimSpace(strings.ToLower(start))
+	if start == "" {
+		return a
+	}
+	var res RatedFolders
+	for _, f := range a {
+		// ignore the last path-segment
+		// path /bar/src/foo becomes /bar/src/
+		pathStart, _ := filepath.Split(f.Path)
+		pathStart = strings.ToLower(pathStart)
+		if strings.Contains(pathStart, start) {
+			res = append(res, f)
+		}
+	}
+	return res
 }
 
 type sorterFn func(a RatedFolders)
@@ -176,9 +200,10 @@ func folderChecker() ResourceCheckerFn {
 	})
 }
 
-// Show returns n RatedFolders.
-func (r *Repo) Show(query string, limit int) RatedFolders {
-	a := search(r.m, query, func(a RatedFolders) { a.sort() })
+// List returns n RatedFolders.
+func (r *Repo) List(q query, limit int) RatedFolders {
+	a := search(r.m, q.last, func(a RatedFolders) { a.sort() })
+	a = filterInPathOf(a, q.start)
 	if len(a) < limit {
 		limit = len(a)
 	}

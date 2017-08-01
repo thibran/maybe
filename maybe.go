@@ -1,3 +1,5 @@
+// +build !android !darwin !windows
+
 package main
 
 import (
@@ -39,12 +41,12 @@ func main() {
 		return
 	}
 	// search
-	if len(p.search) != 0 {
+	if p.search.isNotEmpty() {
 		handleSearch(r, p.search)
 		return
 	}
 	// list
-	if len(p.list) != 0 {
+	if p.list.isNotEmpty() {
 		handleList(r, p.list)
 		return
 	}
@@ -91,8 +93,8 @@ func handleAdd(r *Repo, path string) {
 	}
 }
 
-func handleList(r *Repo, show string) {
-	a := r.Show(show, 10)
+func handleList(r *Repo, q query) {
+	a := r.List(q, 10)
 	if len(a) == 0 {
 		return
 	}
@@ -102,13 +104,13 @@ func handleList(r *Repo, show string) {
 	}
 }
 
-func handleSearch(r *Repo, query string) {
+func handleSearch(r *Repo, q query) {
 	// return path-query directly
-	if strings.HasPrefix(query, "/") {
-		fmt.Println(query)
+	if q.start == "" && strings.HasPrefix(q.last, "/") {
+		fmt.Println(q.last)
 		return
 	}
-	rf, err := r.Search(folderChecker(), query)
+	rf, err := r.Search(folderChecker(), q)
 	if err != nil {
 		// all okay
 		if err == errNoResult {
