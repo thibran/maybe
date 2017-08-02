@@ -8,13 +8,13 @@ import (
 func TestTimesSort(t *testing.T) {
 	var i int
 	now := time.Now()
-	timeBuilder := func() time.Time {
+	timeFn := func() time.Time {
 		i++
 		return now.Add(time.Hour + time.Duration(i))
 	}
 	var a Times
 	for len(a) <= MaxTimeEntries {
-		a = append(a, timeBuilder())
+		a = append(a, timeFn())
 	}
 	a = a.sort()
 
@@ -114,6 +114,45 @@ func TestRemoveOldestFolders(t *testing.T) {
 			}
 			if _, ok := res[tc.notInMap]; ok {
 				t.Fatalf("%s should not be in the map", tc.notInMap)
+			}
+		})
+	}
+}
+
+func TestRatedFoldersSort(t *testing.T) {
+	now := time.Now()
+	ratedFn := func(path string, count uint32) RatedFolder {
+		return RatedFolder{
+			Rating: Rating{timePoints: 0},
+			Folder: Folder{Path: path, UpdateCount: count, Times: Times{now}},
+		}
+	}
+	tt := []struct {
+		name, exp string
+		RatedFolders
+	}{
+		{name: "by path len", exp: "/home/tux/Documents",
+			RatedFolders: RatedFolders{
+				ratedFn("/home/tux/go/src/github.com/nsf/gocode/docs", 1),
+				ratedFn("/home/tux/src/nim/Nim/tools/dochack", 1),
+				ratedFn("/home/tux/src/nim/Nim/lib/packages/docutils", 1),
+				ratedFn("/home/tux/Downloads", 1),
+				ratedFn("/home/tux/Documents", 1),
+			}},
+		{name: "by count", exp: "/home/tux/src/nim/Nim/tools/dochack",
+			RatedFolders: RatedFolders{
+				ratedFn("/home/tux/go/src/github.com/nsf/gocode/docs", 1),
+				ratedFn("/home/tux/src/nim/Nim/tools/dochack", 3),
+				ratedFn("/home/tux/src/nim/Nim/lib/packages/docutils", 1),
+				ratedFn("/home/tux/Downloads", 2),
+				ratedFn("/home/tux/Documents", 1),
+			}},
+	}
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.sort()
+			if tc.RatedFolders[0].Path != tc.exp {
+				t.Errorf("exp %q, got %q", tc.exp, tc.RatedFolders[0].Path)
 			}
 		})
 	}
