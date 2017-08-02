@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"path"
 	"strings"
 	"time"
@@ -117,33 +116,25 @@ func rateTime(now, t time.Time) uint {
 
 // if len(s) is combined in word -> strContains
 func rateSimilarity(base, query string) uint {
-	l := logWithPrefix("rateSimilarity")
-	l(fmt.Sprintf("base: %s, search for: %q", base, query))
-	// l("base:", base, "search for:", s)
 	if base == query {
-		l("strEquals:", strEquals)
 		return strEquals
 	}
 	base = strings.ToLower(base)
 	query = strings.ToLower(query)
 	// equals wrong case
 	if base == query {
-		l("strEqualsWrongCase:", strEqualsWrongCase)
 		return strEqualsWrongCase
 	}
 	// starts with
 	if strings.HasPrefix(base, query) {
-		l("strStartsWith:", strStartsWith)
 		return strStartsWith
 	}
 	// ends with
 	if strings.HasSuffix(base, query) {
-		l("strEndsWith:", strEndsWith)
 		return strEndsWith
 	}
 	// does base even contain s?
 	if strings.Contains(base, query) {
-		l("strContains:", strContains)
 		return strContains
 	}
 	return strSimilarity(base, query)
@@ -152,9 +143,7 @@ func rateSimilarity(base, query string) uint {
 func strSimilarity(base, query string) uint {
 	baseLen := utf8.RuneCountInString(base)
 	// don't compare too short words
-	l := logWithPrefix("strSimilarity")
 	if baseLen < 3 {
-		l("baseLen < 3:", noMatch)
 		return noMatch
 	}
 
@@ -179,9 +168,7 @@ func strSimilarity(base, query string) uint {
 	}
 
 	if diff <= maxdiff {
-		l("diff <= maxdiff:", strSimilar)
 		return strSimilar
 	}
-	l("end:", "noMatch:", noMatch)
 	return noMatch
 }

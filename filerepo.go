@@ -207,7 +207,7 @@ func (r *Repo) List(q query, limit int) RatedFolders {
 	if len(a) < limit {
 		limit = len(a)
 	}
-	return a[0:limit]
+	return a[:limit]
 }
 
 func createTasks(m FolderMap) <-chan Folder {

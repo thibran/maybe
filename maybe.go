@@ -94,7 +94,7 @@ func handleAdd(r *Repo, path string) {
 }
 
 func handleList(r *Repo, q query) {
-	a := r.List(q, 10)
+	a := r.List(q, 8)
 	if len(a) == 0 {
 		return
 	}
