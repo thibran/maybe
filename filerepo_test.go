@@ -181,7 +181,7 @@ func TestList(t *testing.T) {
 			for _, p := range paths {
 				r.updateOrAddPath(p.p, p.t, false)
 			}
-			a := r.List(query{last: tc.search}, tc.limit)
+			a := r.List(query{last: tc.search}, tc.limit, false)
 			if len(a) != tc.resLen {
 				t.Fatalf("len(a) should be %v, got %v", tc.resLen, len(a))
 			}

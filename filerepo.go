@@ -201,13 +201,35 @@ func folderChecker() ResourceCheckerFn {
 }
 
 // List returns n RatedFolders.
-func (r *Repo) List(q query, limit int) RatedFolders {
+func (r *Repo) List(q query, limit int, cutLong bool) RatedFolders {
 	a := search(r.m, q.last, func(a RatedFolders) { a.sort() })
 	a = filterInPathOf(a, q.start)
+	a = cutLongPaths(a, cutLong)
 	if len(a) < limit {
 		limit = len(a)
 	}
 	return a[:limit]
+}
+
+func cutLongPaths(a RatedFolders, cutLong bool) RatedFolders {
+	if !cutLong {
+		return a
+	}
+	var res RatedFolders
+	// use terminal width, when possible
+	maxLineLen := 64
+	if w, err := termWidth(); err == nil {
+		if verbose && w-16 > 0 {
+			maxLineLen = w - 16
+		} else if !verbose && w-10 > 0 {
+			maxLineLen = w - 10
+		}
+	}
+	for _, rf := range a {
+		rf.Path = shortenPath(rf.Path, maxLineLen)
+		res = append(res, rf)
+	}
+	return res
 }
 
 func createTasks(m FolderMap) <-chan Folder {

@@ -6,15 +6,14 @@ version: 0.3.1
 TODO
 ====
 
-- jut too long Repo.List filename - ADD flag like: cutLong bool
 - -t  by time only
 - -r  remove current dir from index
+- maybe replace time rating with: fewer seconds from now > better
+   if a time value is not present, add penalty
 - write fish completion, using --show with a sub-command
    http://fishshell.com/docs/current/index.html#completion-own
    https://stackoverflow.com/questions/16657803/creating-autocomplete-script-with-sub-commands
    https://github.com/fish-shell/fish-shell/issues/1217#issuecomment-31441757
-- maybe replace time rating with: fewer seconds from now > better
-   if a time value is not present, add penalty
 
 fish shell function
 -------------------
@@ -24,7 +23,7 @@ To search, create a fish-function with `funced m` and insert:
 ```
 function m
   if [ "$argv[1]" = "" ]
-    clear
+    # clear
     if [ $PWD != $HOME ]
       cd $HOME
     end
@@ -33,7 +32,7 @@ function m
 
   set d (maybe --search $argv)
   if [ $status = 0 ]
-    clear
+    # clear
     if [ $d != $PWD ]
       cd $d
     end

@@ -113,7 +113,7 @@ func handleSearch(r *Repo, q query) {
 }
 
 func handleList(r *Repo, q query) {
-	a := r.List(q, 8)
+	a := r.List(q, 8, true)
 	if len(a) == 0 {
 		return
 	}
