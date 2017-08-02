@@ -98,9 +98,17 @@ func handleList(r *Repo, q query) {
 	if len(a) == 0 {
 		return
 	}
-	fmt.Println("Points\tFolder")
+	if !verbose {
+		fmt.Println("Rating\tFolder")
+	} else {
+		fmt.Println("Time\tText\tFolder")
+	}
 	for _, rf := range a {
-		fmt.Printf("%d\t%s\n", rf.points(), rf.Path)
+		if !verbose {
+			fmt.Printf("%d\t%s\n", rf.timePoints+rf.similarityPoints, rf.Path)
+		} else {
+			fmt.Printf("%d\t%d\t%s\n", rf.timePoints, rf.similarityPoints, rf.Path)
+		}
 	}
 }
 

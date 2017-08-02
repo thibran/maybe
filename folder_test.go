@@ -57,7 +57,8 @@ func TestNewFolder(t *testing.T) {
 func TestTimeRatedSort(t *testing.T) {
 	now := time.Now()
 	rated := func(path string, timePoints uint, count uint32) RatedFolder {
-		return RatedFolder{timePoints: timePoints,
+		return RatedFolder{
+			Rating: Rating{timePoints: timePoints},
 			Folder: Folder{Path: path, UpdateCount: count, Times: Times{now}},
 		}
 	}

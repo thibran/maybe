@@ -32,18 +32,27 @@ const (
 	noMatch            = 0
 )
 
-// rate search-term s for path p with time-slice a.
-func rate(s, p string, a Times) uint {
+// Rating of a search query
+type Rating struct {
+	timePoints       uint
+	similarityPoints uint
+}
+
+// points return the point sum of a rateing.
+// If no similarity is found, time points are ignored.
+func (r *Rating) points() uint {
+	return r.similarityPoints + r.timePoints
+}
+
+// newRating rates search-term s for path p within time-slice a.
+func newRating(s, p string, a Times) Rating {
 	base := path.Base(p)
-	var n uint
-	n += rateSimilarity(base, s)
-	// no string match -> return
+	n := rateSimilarity(base, s)
 	if n == noMatch {
-		return n
+		return Rating{}
 	}
 	timeRate := ratePassedTime(a)
-	n += timeRate
-	return n
+	return Rating{similarityPoints: n, timePoints: timeRate}
 }
 
 func ratePassedTime(a Times) uint {

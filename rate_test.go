@@ -5,12 +5,12 @@ import (
 	"time"
 )
 
-func TestRate_noMatch(t *testing.T) {
-	n := rate("aaa", "/home/foo", []time.Time{time.Now()})
-	if n != noMatch {
-		t.Fail()
-	}
-}
+// func TestRate_noMatch(t *testing.T) {
+// 	n := rate("aaa", "/home/foo", []time.Time{time.Now()})
+// 	if n != noMatch {
+// 		t.Fail()
+// 	}
+// }
 
 func TestRateSimilarity(t *testing.T) {
 	// verbose = true
@@ -118,14 +118,14 @@ func TestRateTime(t *testing.T) {
 	}
 }
 
-func TestRate_maxRating(t *testing.T) {
-	s := "foo"
-	f := NewFolder("/home/foo", time.Now().Add(-time.Second*40))
-	n := rate(s, f.Path, f.Times)
-	if n != strEquals+timeLessThanMinute {
-		t.Fail()
-	}
-}
+// func TestRate_maxRating(t *testing.T) {
+// 	s := "foo"
+// 	f := NewFolder("/home/foo", time.Now().Add(-time.Second*40))
+// 	n := rate(s, f.Path, f.Times)
+// 	if n != strEquals+timeLessThanMinute {
+// 		t.Fail()
+// 	}
+// }
 
 // type Dict []string
 

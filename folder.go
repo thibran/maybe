@@ -49,18 +49,7 @@ func (t Times) sort() Times {
 // RatedFolder object.
 type RatedFolder struct {
 	Folder
-	timePoints       uint
-	similarityPoints uint
-}
-
-// points return the points of a rated folder.
-// If no similarity is found, time points are ignored.
-func (rf *RatedFolder) points() uint {
-	n := rf.similarityPoints
-	if n == noMatch {
-		return n
-	}
-	return n + rf.timePoints
+	Rating
 }
 
 // RatedFolders is an alias for RatedFolder-slice.
@@ -69,9 +58,8 @@ type RatedFolders []RatedFolder
 // NewRatedFolder creates a new object.
 func NewRatedFolder(f Folder, query string) RatedFolder {
 	return RatedFolder{
-		timePoints:       ratePassedTime(f.Times),
-		similarityPoints: rateSimilarity(path.Base(f.Path), query),
-		Folder:           f,
+		Folder: f,
+		Rating: newRating(query, path.Base(f.Path), f.Times),
 	}
 }
 
