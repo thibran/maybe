@@ -29,7 +29,7 @@ func newOSWalker(r *Repo, root string) *osWalker {
 		root:    fp.Clean(root), // converts e.g. /foo/ to /foo
 		lvlDeep: lvlDeep,
 		r:       r,
-		now:     time.Now(),
+		now:     time.Date(2000, time.January, 0, 0, 0, 0, 0, time.UTC),
 		count:   len(r.m),
 	}
 }

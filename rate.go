@@ -21,7 +21,7 @@ const (
 	timeLessThanTwoMonths   = 12
 	timeLessThanSixMonths   = 9
 	timeLessThanYear        = 6
-	timeOlderThanAYear      = 3
+	timeOlderThanAYear      = 0
 
 	strEquals          = 200 // 160
 	strEqualsWrongCase = 80

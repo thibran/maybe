@@ -93,25 +93,6 @@ func handleAdd(r *Repo, path string) {
 	}
 }
 
-func handleList(r *Repo, q query) {
-	a := r.List(q, 8)
-	if len(a) == 0 {
-		return
-	}
-	if !verbose {
-		fmt.Println("Rating\tFolder")
-	} else {
-		fmt.Println("Time\tText\tFolder")
-	}
-	for _, rf := range a {
-		if !verbose {
-			fmt.Printf("%d\t%s\n", rf.timePoints+rf.similarityPoints, rf.Path)
-		} else {
-			fmt.Printf("%d\t%d\t%s\n", rf.timePoints, rf.similarityPoints, rf.Path)
-		}
-	}
-}
-
 func handleSearch(r *Repo, q query) {
 	// return path-query directly
 	if q.start == "" && strings.HasPrefix(q.last, "/") {
@@ -129,4 +110,23 @@ func handleSearch(r *Repo, q query) {
 		os.Exit(2)
 	}
 	fmt.Println(rf.Path)
+}
+
+func handleList(r *Repo, q query) {
+	a := r.List(q, 8)
+	if len(a) == 0 {
+		return
+	}
+	if !verbose {
+		fmt.Println("Rating\tFolder")
+	} else {
+		fmt.Println("Time\tText\tFolder")
+	}
+	for _, rf := range a {
+		if !verbose {
+			fmt.Printf("%d\t%s\n", rf.points(), rf.Path)
+		} else {
+			fmt.Printf("%d\t%d\t%s\n", rf.timePoints, rf.similarityPoints, rf.Path)
+		}
+	}
 }

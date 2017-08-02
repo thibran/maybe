@@ -69,6 +69,12 @@ func (a RatedFolders) sort() {
 		pi = a[i].points()
 		pj = a[j].points()
 		if pi == pj {
+			// TODO compare path-len when update count is equal
+			// 0	70	/home/tux/go/src/github.com/nsf/gocode/docs
+			// 0	70	/home/tux/src/nim/Nim/tools/dochack
+			// 0	70	/home/tux/src/nim/Nim/lib/packages/docutils
+			// 0	70	/home/tux/Downloads
+			// 0	70	/home/tux/Documents
 			return a[i].UpdateCount > a[j].UpdateCount
 		}
 		return pi > pj

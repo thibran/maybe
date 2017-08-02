@@ -6,6 +6,7 @@ version: 0.3.1
 TODO
 ====
 
+- jut too long Repo.List filename - ADD flag like: cutLong bool
 - -t  by time only
 - -r  remove current dir from index
 - write fish completion, using --show with a sub-command
