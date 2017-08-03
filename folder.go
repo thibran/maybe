@@ -37,8 +37,8 @@ type Times []time.Time
 // MaxTimeEntries of time.Time entries in a Times slice.
 const MaxTimeEntries = 6
 
-// sort time entries and cut all entries longer than MaxTimesEntries.
-func (t Times) sort() Times {
+// sortAndCut time entries and keep only MaxTimesEntries.
+func (t Times) sortAndCut() Times {
 	sort.Slice(t, func(i, j int) bool { return t[i].After(t[j]) })
 	if len(t) > MaxTimeEntries {
 		return t[:MaxTimeEntries]
@@ -83,26 +83,19 @@ type RatedTimeFolders []RatedFolder
 
 // RemoveOldestFolders from map m, keep newest n entries.
 func RemoveOldestFolders(m FolderMap, n int) FolderMap {
-	return fromFolderMap(m).removeOldest(n)
-}
-
-func fromFolderMap(m FolderMap) RatedTimeFolders {
+	// to time-folders
 	a := make(RatedTimeFolders, len(m))
 	var i int
 	for _, f := range m {
 		a[i] = NewRatedFolder(f, "")
 		i++
 	}
-	return a
-}
-
-// removeOldest and keep n entries.
-func (a RatedTimeFolders) removeOldest(n int) FolderMap {
+	// delete too old entries
 	a.sort()
 	if len(a) > n {
 		a = a[:n]
 	}
-	m := make(FolderMap, len(a))
+	m = make(FolderMap, len(a))
 	for _, rf := range a {
 		m[rf.Path] = rf.Folder
 	}

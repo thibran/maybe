@@ -16,7 +16,7 @@ func TestTimesSort(t *testing.T) {
 	for len(a) <= MaxTimeEntries {
 		a = append(a, timeFn())
 	}
-	a = a.sort()
+	a = a.sortAndCut()
 
 	if len(a) != MaxTimeEntries {
 		t.Errorf("len(a) should be %d, got %d", MaxTimeEntries, len(a))

@@ -99,7 +99,7 @@ func (r *Repo) updateOrAddPath(path string, t time.Time, subfolder bool) {
 		f.UpdateCount++
 	}
 	f.Times = append(f.Times, t)
-	f.Times = f.Times.sort() // sort and keep only data.MaxTimesEntries
+	f.Times = f.Times.sortAndCut() // keep only data.MaxTimesEntries
 	r.m[path] = f
 }
 
