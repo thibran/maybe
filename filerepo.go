@@ -58,12 +58,11 @@ func (r *Repo) Walk(root string) {
 func (r *Repo) Add(path string, t time.Time) {
 	segments := strings.Split(path, osSep)
 	len := len(segments)
-Loop:
 	for i := 0; i < len-1; i++ {
 		path = strings.Join(segments[:len-i], osSep)
 		if isInIgnoreList(segments[len-1-i]) {
 			logf("ignore: %s\n", path)
-			continue Loop
+			continue
 		}
 		r.updateOrAddPath(path, t, i > 0)
 	}
@@ -73,7 +72,6 @@ Loop:
 // their timestamps are not updated.
 func (r *Repo) updateOrAddPath(path string, t time.Time, subfolder bool) {
 	f, ok := r.m[path]
-
 	// new folder object
 	if !ok {
 		var sf string
@@ -85,11 +83,10 @@ func (r *Repo) updateOrAddPath(path string, t time.Time, subfolder bool) {
 
 		// guarantee folder limit holds
 		if len(r.m) > r.maxEntries {
-			r.m = RemoveOldestFolders(r.m, r.maxEntries-r.maxEntries/3)
+			r.m.RemoveOldest(r.maxEntries - r.maxEntries/3)
 		}
 		return
 	}
-
 	// update existing folder object
 	if subfolder {
 		return
@@ -99,7 +96,7 @@ func (r *Repo) updateOrAddPath(path string, t time.Time, subfolder bool) {
 		f.UpdateCount++
 	}
 	f.Times = append(f.Times, t)
-	f.Times = f.Times.sortAndCut() // keep only data.MaxTimesEntries
+	f.Times = sortAndCut(f.Times...) // keep only data.MaxTimesEntries
 	r.m[path] = f
 }
 
@@ -118,28 +115,29 @@ func (fn ResourceCheckerFn) doesExist(path string) bool {
 }
 
 // Search repo for query.
-func (r *Repo) Search(ch ResourceChecker, q query) (RatedFolder, error) {
+func (r *Repo) Search(ch ResourceChecker, q query) (*RatedFolder, error) {
 	a := search(r.m, q.last, func(a RatedFolders) { a.sort() })
-	for _, v := range filterInPathOf(a, q.start) {
+	a.filterInPathOf(q.start)
+	for _, v := range a {
 		// keep not found folders, they might re-exist in future
 		if ch.doesExist(v.Path) {
 			// if checkFolder(v.folder.Path) {
 			return v, nil
 		}
 	}
-	return RatedFolder{}, errNoResult
+	return nil, errNoResult
 }
 
 // filterInPathOf returns a slice of entries where the path
 // contains the start-string in the non-last segment.
 // When start is empty, the input is returned as-is.
-func filterInPathOf(a RatedFolders, start string) RatedFolders {
+func (rf *RatedFolders) filterInPathOf(start string) {
 	start = strings.TrimSpace(strings.ToLower(start))
 	if start == "" {
-		return a
+		return
 	}
 	var res RatedFolders
-	for _, f := range a {
+	for _, f := range *rf {
 		// ignore the last path-segment
 		// path /bar/src/foo becomes /bar/src/
 		pathStart, _ := filepath.Split(f.Path)
@@ -148,7 +146,7 @@ func filterInPathOf(a RatedFolders, start string) RatedFolders {
 			res = append(res, f)
 		}
 	}
-	return res
+	*rf = res
 }
 
 type sorterFn func(a RatedFolders)
@@ -166,19 +164,16 @@ func search(m FolderMap, query string, sort sorterFn) RatedFolders {
 	wg.Add(workers)
 
 	tasks := createTasks(m)
-	results := make(chan RatedFolder)
-
+	results := make(chan *RatedFolder)
 	go func() {
 		wg.Wait()
 		close(results)
 	}()
-
 	for i := 0; i < workers; i++ {
 		go func() {
-			var rf RatedFolder
 			for folder := range tasks {
-				rf = NewRatedFolder(folder, query)
-				if rf.points() == noMatch {
+				rf, err := NewRatedFolder(folder, query)
+				if err != nil || rf.points() == noMatch {
 					continue
 				}
 				results <- rf
@@ -200,20 +195,17 @@ func folderChecker() ResourceCheckerFn {
 	})
 }
 
-// List returns n RatedFolders.
-func (r *Repo) List(q query, limit int, cutLong bool) RatedFolders {
+// List returns all RatedFolders for the query q.
+func (r *Repo) List(q query, cutLong bool) RatedFolders {
 	a := search(r.m, q.last, func(a RatedFolders) { a.sort() })
-	a = filterInPathOf(a, q.start)
-	a = cutLongPaths(a, cutLong)
-	if len(a) < limit {
-		limit = len(a)
-	}
-	return a[:limit]
+	a.filterInPathOf(q.start)
+	a.cutLongPaths(cutLong)
+	return a
 }
 
-func cutLongPaths(a RatedFolders, cutLong bool) RatedFolders {
+func (rf *RatedFolders) cutLongPaths(cutLong bool) {
 	if !cutLong {
-		return a
+		return
 	}
 	var res RatedFolders
 	// use terminal width, when possible
@@ -225,15 +217,15 @@ func cutLongPaths(a RatedFolders, cutLong bool) RatedFolders {
 			maxLineLen = w - 10
 		}
 	}
-	for _, rf := range a {
+	for _, rf := range *rf {
 		rf.Path = shortenPath(rf.Path, maxLineLen)
 		res = append(res, rf)
 	}
-	return res
+	*rf = res
 }
 
-func createTasks(m FolderMap) <-chan Folder {
-	tasks := make(chan Folder)
+func createTasks(m FolderMap) <-chan *Folder {
+	tasks := make(chan *Folder)
 	go func() {
 		for _, folder := range m {
 			tasks <- folder
@@ -243,7 +235,7 @@ func createTasks(m FolderMap) <-chan Folder {
 	return tasks
 }
 
-func collectResults(c <-chan RatedFolder, sort sorterFn) RatedFolders {
+func collectResults(c <-chan *RatedFolder, sort sorterFn) RatedFolders {
 	var a RatedFolders
 	for r := range c {
 		a = append(a, r)
@@ -282,7 +274,6 @@ func (r *Repo) Load() error {
 		return err
 	}
 	defer f.Close()
-
 	m, err := loadGzip(f)
 	if err != nil {
 		return err

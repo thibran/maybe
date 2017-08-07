@@ -1,36 +1,34 @@
 package main
 
 import (
+	"fmt"
 	"path"
 	"sort"
 	"time"
 )
 
 // FolderMap type alias
-type FolderMap map[string]Folder
+type FolderMap map[string]*Folder
 
 // Folder entry.
 type Folder struct {
 	Path        string
-	UpdateCount uint32 // counts how often the folder has been updated
-	Times       Times  // last MaxTimesEntries updates
+	UpdateCount uint32      // counts how often the folder has been updated
+	Times       []time.Time // last MaxTimesEntries updates
 }
-
-// Times is a shorthand for a time slice.
-type Times []time.Time
 
 // MaxTimeEntries of time.Time entries in a Times slice.
 const MaxTimeEntries = 6
 
 // NewFolder object.
-func NewFolder(path string, times ...time.Time) Folder {
-	if len(path) == 0 {
+func NewFolder(path string, times ...time.Time) *Folder {
+	if path == "" {
 		panic("NewFolder - empty path is prohibited")
 	}
 	if len(times) == 0 {
 		panic("NewFolder - must have at last one []time entry")
 	}
-	return Folder{
+	return &Folder{
 		Path:        path,
 		UpdateCount: 1,
 		Times:       times,
@@ -38,29 +36,36 @@ func NewFolder(path string, times ...time.Time) Folder {
 }
 
 // sortAndCut time entries and keep only MaxTimesEntries.
-func (t Times) sortAndCut() Times {
-	sort.Slice(t, func(i, j int) bool { return t[i].After(t[j]) })
-	if len(t) > MaxTimeEntries {
-		return t[:MaxTimeEntries]
+func sortAndCut(a ...time.Time) []time.Time {
+	sort.Slice(a, func(i, j int) bool { return a[i].After(a[j]) })
+	if len(a) > MaxTimeEntries {
+		return a[:MaxTimeEntries]
 	}
-	return t
+	return a
 }
 
 // RatedFolder object.
 type RatedFolder struct {
-	Folder
-	Rating
+	*Folder
+	*Rating
 }
 
 // RatedFolders is an alias for RatedFolder-slice.
-type RatedFolders []RatedFolder
+type RatedFolders []*RatedFolder
 
 // NewRatedFolder creates a new object.
-func NewRatedFolder(f Folder, query string) RatedFolder {
-	return RatedFolder{
-		Folder: f,
-		Rating: newRating(query, path.Base(f.Path), f.Times),
+func NewRatedFolder(f *Folder, query string) (*RatedFolder, error) {
+	if f == nil {
+		return nil, fmt.Errorf("NewRatedFolder - *Folder is nil")
 	}
+	r, err := NewRating(query, path.Base(f.Path), f.Times...)
+	if err != nil {
+		return nil, fmt.Errorf("NewRatedFolder - %v", err)
+	}
+	return &RatedFolder{
+		Folder: f,
+		Rating: r,
+	}, nil
 }
 
 func (a RatedFolders) sort() {
@@ -79,27 +84,27 @@ func (a RatedFolders) sort() {
 }
 
 // RatedTimeFolders alias with time focused sort implementation.
-type RatedTimeFolders []RatedFolder
+type RatedTimeFolders []*RatedFolder
 
-// RemoveOldestFolders from map m, keep newest n entries.
-func RemoveOldestFolders(m FolderMap, n int) FolderMap {
+// RemoveOldest folders from map m and keep newest n entries.
+func (fm *FolderMap) RemoveOldest(n int) {
 	// to time-folders
-	a := make(RatedTimeFolders, len(m))
-	var i int
-	for _, f := range m {
-		a[i] = NewRatedFolder(f, "")
-		i++
+	var a RatedTimeFolders
+	for _, f := range *fm {
+		if rf, err := NewRatedFolder(f, ""); err == nil {
+			a = append(a, rf)
+		}
 	}
 	// delete too old entries
 	a.sort()
 	if len(a) > n {
 		a = a[:n]
 	}
-	m = make(FolderMap, len(a))
+	m := make(FolderMap, len(a))
 	for _, rf := range a {
 		m[rf.Path] = rf.Folder
 	}
-	return m
+	*fm = m
 }
 
 func (a RatedTimeFolders) sort() {

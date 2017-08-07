@@ -85,7 +85,7 @@ func TestSearch(t *testing.T) {
 			if err != nil && tc.exp != "" {
 				t.Fatalf("exp %q, got %v", tc.exp, err)
 			}
-			if rf.Path != tc.exp {
+			if rf != nil && rf.Path != tc.exp {
 				t.Fatalf("exp %q, got %q", tc.exp, rf.Path)
 			}
 			if tc.exp == "" && err != errNoResult {
@@ -163,17 +163,17 @@ func TestList(t *testing.T) {
 		{p: "/bbbbb/foo", t: now.Add(-time.Hour * 14)},
 	}
 	tt := []struct {
-		name, exp, search    string
-		index, limit, resLen int
+		name, exp, search string
+		index, resLen     int
 	}{
 		{name: "okay 1", search: "foo", exp: "/home/foo",
-			index: 0, limit: 2, resLen: 2},
+			index: 0, resLen: 3},
 		{name: "okay 2", search: "foo", exp: "/bbbbb/foo",
-			index: 1, limit: 2, resLen: 2},
-		{name: "no result", search: "foo", exp: "",
-			index: 0, limit: 0, resLen: 0},
+			index: 1, resLen: 3},
 		{name: "one result", search: "apt", exp: "/etc/apt",
-			index: 0, limit: 3, resLen: 1},
+			index: 0, resLen: 1},
+		{name: "no result", search: "zot", exp: "",
+			index: 0, resLen: 0},
 	}
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
@@ -181,7 +181,7 @@ func TestList(t *testing.T) {
 			for _, p := range paths {
 				r.updateOrAddPath(p.p, p.t, false)
 			}
-			a := r.List(query{last: tc.search}, tc.limit, false)
+			a := r.List(query{last: tc.search}, false)
 			if len(a) != tc.resLen {
 				t.Fatalf("len(a) should be %v, got %v", tc.resLen, len(a))
 			}
@@ -204,28 +204,46 @@ func TestAdd(t *testing.T) {
 
 func TestUpdateOrAddPath(t *testing.T) {
 	// verbose = true
-	keepEntries := 2
-	r := NewRepo("/baz/bar/zot", keepEntries)
-	r.updateOrAddPath("/zot", time.Now(), false)
-	r.updateOrAddPath("/bar", time.Now(), false)
-	r.updateOrAddPath("/foo", time.Now(), false)
-	if len(r.m) != keepEntries {
-		t.Fatalf("expected %d, got %v", keepEntries, len(r.m))
+	tt := []struct {
+		name                   string
+		maxEntries, expEntries int
+		paths                  []string
+		overflow               bool
+		expCount               uint32
+	}{
+		{name: "keep newest", maxEntries: 2, expEntries: 2, expCount: 1,
+			paths: []string{"/zot", "/bar", "/foo"}},
+
+		{name: "counter overflow", maxEntries: 2, expEntries: 1,
+			expCount: uint32(math.MaxUint32),
+			overflow: true, paths: []string{"/zot"}},
 	}
-	// test f.UpdateCount overflow protection
-	exp := uint32(math.MaxUint32)
-	f := r.m["/zot"]
-	f.UpdateCount = exp
-	r.m["/zot"] = f
-	r.updateOrAddPath("/zot", time.Now(), false)
-	if f = r.m["/zot"]; f.UpdateCount != exp {
-		t.Errorf("UpdateCount should %v, got %v", exp, f.UpdateCount)
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			r := NewRepo("/baz/bar/zot", tc.maxEntries)
+			for _, p := range tc.paths {
+				r.updateOrAddPath(p, time.Now(), false)
+			}
+			if len(r.m) != tc.expEntries {
+				t.Fatalf("exp expEntries %d, got %v", tc.expEntries, len(r.m))
+			}
+			if tc.overflow {
+				f := r.m["/zot"]
+				f.UpdateCount = tc.expCount
+			}
+			for k, f := range r.m {
+				if f.UpdateCount != tc.expCount {
+					t.Errorf("UpdateCount for %s should be %v, got %v",
+						k, tc.expCount, f.UpdateCount)
+				}
+			}
+		})
 	}
 }
 
 func TestFilterInPathOf(t *testing.T) {
 	now := time.Now()
-	newFolder := func(p string) Folder { return NewFolder(p, now) }
+	newFolder := func(p string) *Folder { return NewFolder(p, now) }
 	a := RatedFolders{
 		{Folder: newFolder("/bar/src/foo")},
 		{Folder: newFolder("/bar/no/foo")},
@@ -243,12 +261,13 @@ func TestFilterInPathOf(t *testing.T) {
 	}
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			res := filterInPathOf(a, tc.start)
-			if len(res) != tc.len {
+			arr := a
+			arr.filterInPathOf(tc.start)
+			if len(arr) != tc.len {
 				t.Fail()
 			}
-			if tc.exp != "" && res[0].Path != tc.exp {
-				t.Errorf("%s - exp %v, got %v", tc.name, tc.exp, res[0].Path)
+			if tc.exp != "" && arr[0].Path != tc.exp {
+				t.Errorf("%s - exp %v, got %v", tc.name, tc.exp, arr[0].Path)
 			}
 		})
 	}

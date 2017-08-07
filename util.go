@@ -1,3 +1,5 @@
+// +build !android !darwin !windows
+
 package main
 
 import (
@@ -56,14 +58,21 @@ func shortenPath(p string, max int) string {
 
 func termWidth() (int, error) {
 	cmd := exec.Command("tput", "cols")
-	buf, err := cmd.CombinedOutput()
+	buf, err := cmd.Output()
 	if err != nil {
 		return 0, err
 	}
 	buf = bytes.TrimSpace(buf)
-	termWidth, err := strconv.Atoi(string(buf))
+	width, err := strconv.Atoi(string(buf))
 	if err != nil {
 		return 0, err
 	}
-	return termWidth, nil
+	return width, nil
+}
+
+func normalOrVerbose(normal, verb string) string {
+	if !verbose {
+		return normal
+	}
+	return verb
 }

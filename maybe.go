@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	appVersion    = "0.3.1"
+	appVersion    = "0.3.2"
 	maxEntries    = 10000
 	minMaxEntries = 200 // minimal value for the maxEntries variable
 )
@@ -24,7 +24,7 @@ var verbose = false
 func main() {
 	p := parse()
 	r := NewRepo(filepath.Join(p.dataDir, "maybe.data"), p.maxEntries)
-	loadData(r, p.dataDir)
+	r.LoadData(p.dataDir)
 	// version
 	if p.version {
 		handleVersion(r, p.dataDir)
@@ -55,7 +55,8 @@ func main() {
 	os.Exit(1)
 }
 
-func loadData(r *Repo, dataDir string) {
+// LoadData from dataDir or create directory.
+func (r *Repo) LoadData(dataDir string) {
 	if err := r.Load(); err != nil {
 		if err != errNoFile {
 			log.Fatalln(err)
@@ -81,6 +82,7 @@ func handleInit(r *Repo, homeDir string) {
 	if err := r.Save(); err != nil {
 		log.Fatalf("handleInit failed with: %v\n", err)
 	}
+	fmt.Println("entries:", r.Size())
 }
 
 func handleAdd(r *Repo, path string) {
@@ -113,20 +115,33 @@ func handleSearch(r *Repo, q query) {
 }
 
 func handleList(r *Repo, q query) {
-	a := r.List(q, 8, true)
+	a := r.List(q, true)
 	if len(a) == 0 {
 		return
 	}
-	if !verbose {
-		fmt.Println("Rating\tFolder")
-	} else {
-		fmt.Println("Time\tText\tFolder")
+	var res []string
+	res = append(res, normalOrVerbose("Rating\tFolder", "Time\tText\tFolder"))
+	pathExistFn := folderChecker()
+	appendFn := func(rf *RatedFolder) {
+		res = append(res, normalOrVerbose(
+			fmt.Sprintf("%d\t%s", rf.points(), rf.Path),
+			fmt.Sprintf("%d\t%d\t%s", rf.timePoints,
+				rf.similarityPoints, rf.Path)))
 	}
+	entries := 0
+	entryLimit := 8
 	for _, rf := range a {
-		if !verbose {
-			fmt.Printf("%d\t%s\n", rf.points(), rf.Path)
-		} else {
-			fmt.Printf("%d\t%d\t%s\n", rf.timePoints, rf.similarityPoints, rf.Path)
+		if entries == entryLimit {
+			break
 		}
+		if !pathExistFn(rf.Path) {
+			continue
+		}
+		appendFn(rf)
+		entries++
 	}
+	if len(res) == 1 {
+		return
+	}
+	fmt.Println(strings.Join(res, "\n"))
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"path"
 	"strings"
 	"time"
@@ -24,8 +25,8 @@ const (
 	timeOlderThanAYear      = 0
 
 	strEquals          = 200 // 160
-	strEqualsWrongCase = 80
-	strStartsWith      = 70
+	strEqualsWrongCase = 100 // 80
+	strStartsWith      = 80  // 70
 	strEndsWith        = 60
 	strContains        = 40
 	strSimilar         = 20
@@ -44,18 +45,18 @@ func (r *Rating) points() uint {
 	return r.similarityPoints + r.timePoints
 }
 
-// newRating rates search-term s for path p within time-slice a.
-func newRating(s, p string, a Times) Rating {
+// NewRating rates search-term s for path p within time-slice a.
+func NewRating(s, p string, a ...time.Time) (*Rating, error) {
 	base := path.Base(p)
 	n := rateSimilarity(base, s)
 	if n == noMatch {
-		return Rating{}
+		return nil, fmt.Errorf("NewRating - similarity: noMatch")
 	}
-	timeRate := ratePassedTime(a)
-	return Rating{similarityPoints: n, timePoints: timeRate}
+	timeRate := ratePassedTime(a...)
+	return &Rating{similarityPoints: n, timePoints: timeRate}, nil
 }
 
-func ratePassedTime(a Times) uint {
+func ratePassedTime(a ...time.Time) uint {
 	var n uint
 	now := time.Now()
 	for _, t := range a {

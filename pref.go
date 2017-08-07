@@ -11,24 +11,10 @@ import (
 )
 
 type pref struct {
-	dataDir    string
-	homeDir    string
-	add        string
-	search     query
-	list       query
-	init       bool
-	version    bool
-	maxEntries int
-}
-
-type query struct {
-	start, last string
-}
-
-func (q *query) isNotEmpty() bool { return len(q.last) > 0 }
-
-func (q query) String() string {
-	return fmt.Sprintf("{start: %s  last: %s}", q.start, q.last)
+	dataDir, homeDir, add string
+	list, search          query
+	version, init         bool
+	maxEntries            int
 }
 
 func parse() pref {
@@ -52,6 +38,16 @@ func parse() pref {
 
 	verbose = *verb
 	return p
+}
+
+type query struct {
+	start, last string
+}
+
+func (q *query) isNotEmpty() bool { return len(q.last) > 0 }
+
+func (q query) String() string {
+	return fmt.Sprintf("{start: %s  last: %s}", q.start, q.last)
 }
 
 func queryFrom(s string) query {

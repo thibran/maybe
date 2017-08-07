@@ -12,11 +12,11 @@ func TestTimesSort(t *testing.T) {
 		i++
 		return now.Add(time.Hour + time.Duration(i))
 	}
-	var a Times
+	var a []time.Time
 	for len(a) <= MaxTimeEntries {
 		a = append(a, timeFn())
 	}
-	a = a.sortAndCut()
+	a = sortAndCut(a...)
 
 	if len(a) != MaxTimeEntries {
 		t.Errorf("len(a) should be %d, got %d", MaxTimeEntries, len(a))
@@ -56,10 +56,11 @@ func TestNewFolder(t *testing.T) {
 
 func TestTimeRatedSort(t *testing.T) {
 	now := time.Now()
-	rated := func(path string, timePoints uint, count uint32) RatedFolder {
-		return RatedFolder{
-			Rating: Rating{timePoints: timePoints},
-			Folder: Folder{Path: path, UpdateCount: count, Times: Times{now}},
+	rated := func(path string, timePoints uint, count uint32) *RatedFolder {
+		return &RatedFolder{
+			Rating: &Rating{timePoints: timePoints},
+			Folder: &Folder{Path: path, UpdateCount: count,
+				Times: []time.Time{now}},
 		}
 	}
 	tt := []struct {
@@ -86,7 +87,7 @@ func TestTimeRatedSort(t *testing.T) {
 }
 
 func TestRemoveOldestFolders(t *testing.T) {
-	fn := func(p string, t time.Time) Folder {
+	fn := func(p string, t time.Time) *Folder {
 		return NewFolder(p, t)
 	}
 	now := time.Now()
@@ -108,11 +109,11 @@ func TestRemoveOldestFolders(t *testing.T) {
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
 			m := FolderMap{f1.Path: f1, f2.Path: f2, f3.Path: f3}
-			res := RemoveOldestFolders(m, tc.keepValues)
-			if len(res) != tc.resultLen {
-				t.Fatalf("expected len(res) %d, got %v", tc.keepValues, len(res))
+			m.RemoveOldest(tc.keepValues)
+			if len(m) != tc.resultLen {
+				t.Fatalf("expected len(res) %d, got %v", tc.keepValues, len(m))
 			}
-			if _, ok := res[tc.notInMap]; ok {
+			if _, ok := m[tc.notInMap]; ok {
 				t.Fatalf("%s should not be in the map", tc.notInMap)
 			}
 		})
@@ -121,10 +122,11 @@ func TestRemoveOldestFolders(t *testing.T) {
 
 func TestRatedFoldersSort(t *testing.T) {
 	now := time.Now()
-	ratedFn := func(path string, count uint32) RatedFolder {
-		return RatedFolder{
-			Rating: Rating{timePoints: 0},
-			Folder: Folder{Path: path, UpdateCount: count, Times: Times{now}},
+	ratedFn := func(path string, count uint32) *RatedFolder {
+		return &RatedFolder{
+			Rating: &Rating{timePoints: 0},
+			Folder: &Folder{Path: path, UpdateCount: count,
+				Times: []time.Time{now}},
 		}
 	}
 	tt := []struct {
