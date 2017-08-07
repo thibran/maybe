@@ -1,12 +1,11 @@
 maybe
 =====
 
-version: 0.3.1
+version: 0.3.2
 
 TODO
 ====
 
-- -t  by time only
 - -r  remove current dir from index
 - maybe replace time rating with: fewer seconds from now > better
    if a time value is not present, add penalty

@@ -16,6 +16,12 @@ type Folder struct {
 	Times       Times  // last MaxTimesEntries updates
 }
 
+// Times is a shorthand for a time slice.
+type Times []time.Time
+
+// MaxTimeEntries of time.Time entries in a Times slice.
+const MaxTimeEntries = 6
+
 // NewFolder object.
 func NewFolder(path string, times ...time.Time) Folder {
 	if len(path) == 0 {
@@ -30,12 +36,6 @@ func NewFolder(path string, times ...time.Time) Folder {
 		Times:       times,
 	}
 }
-
-// Times is a shorthand for a time slice.
-type Times []time.Time
-
-// MaxTimeEntries of time.Time entries in a Times slice.
-const MaxTimeEntries = 6
 
 // sortAndCut time entries and keep only MaxTimesEntries.
 func (t Times) sortAndCut() Times {
