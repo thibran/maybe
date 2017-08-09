@@ -1,5 +1,3 @@
-// +build !android !darwin !windows
-
 package main
 
 import (
@@ -11,19 +9,19 @@ import (
 	"runtime"
 	"strings"
 	"thibaut/maybe/pref"
-	"thibaut/maybe/ratedfolder"
-	"thibaut/maybe/ratedfolder/folder"
+	"thibaut/maybe/rated"
+	"thibaut/maybe/rated/folder"
 	"thibaut/maybe/repo"
 	"thibaut/maybe/util"
 	"time"
 )
 
-const appVersion = "0.3.2"
+const appVersion = "0.3.3"
 
 func main() {
 	p := pref.Parse()
 	r := repo.New(filepath.Join(p.DataDir, "maybe.data"), p.MaxEntries)
-	r.LoadData(p.DataDir)
+	r.Load(p.DataDir)
 	// version
 	if p.Version {
 		handleVersion(r, p.DataDir)
@@ -108,7 +106,7 @@ func handleList(r *repo.Repo, q pref.Query) {
 	var res []string
 	res = append(res, util.NormalOrVerbose("Rating\tFolder", "Time\tText\tFolder"))
 	pathExistFn := folder.CheckerFn()
-	appendFn := func(rf *ratedfolder.RatedFolder) {
+	appendFn := func(rf *rated.Rated) {
 		res = append(res, util.NormalOrVerbose(
 			fmt.Sprintf("%d\t%s", rf.Points(), rf.Path),
 			fmt.Sprintf("%d\t%d\t%s", rf.TimePoints,

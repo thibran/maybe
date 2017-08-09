@@ -1,17 +1,17 @@
-package ratedfolder
+package rated
 
 import (
 	"sort"
 	"time"
 )
 
-// MaxTimeEntries of time.Time entries in a Times slice.
+// MaxTimeEntries of time.Time entries in a TimeSlice.
 const MaxTimeEntries = 6
 
-// RatedTimeFolders alias with time focused sort implementation.
-type RatedTimeFolders []*RatedFolder
+// TimeSlice alias with time focused sort implementation.
+type TimeSlice []*Rated
 
-func (a RatedTimeFolders) sort() {
+func (a TimeSlice) sort() {
 	sort.Slice(a, func(i, j int) bool {
 		if a[i].TimePoints == a[j].TimePoints {
 			return a[i].UpdateCount > a[j].UpdateCount

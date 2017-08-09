@@ -39,7 +39,7 @@ func TestClassifyText(t *testing.T) {
 	}
 }
 
-func TestTimeValue(t *testing.T) {
+func TestTimeHelper(t *testing.T) {
 	// verbose = true
 	tt := []struct {
 		name               string
@@ -105,7 +105,7 @@ func TestTimeValue(t *testing.T) {
 
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			if n := timeValue(tc.nowTime, tc.otherTime); n != tc.exp {
+			if n := timeHelper(tc.nowTime, tc.otherTime); n != tc.exp {
 				t.Errorf("%s - exp %v, got %v", tc.name, tc.exp, n)
 			}
 		})

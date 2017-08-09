@@ -9,7 +9,9 @@ import (
 	"time"
 )
 
-type osWalker struct {
+var errWalkMaxDirEntries = fmt.Errorf("max entries reached")
+
+type walker struct {
 	root    string
 	lvlDeep uint
 	r       *Repo
@@ -17,7 +19,7 @@ type osWalker struct {
 	count   int
 }
 
-func newOSWalker(r *Repo, root string) *osWalker {
+func newWalker(r *Repo, root string) *walker {
 	var lvlDeep uint = 6
 	if !pref.Verbose {
 		fmt.Println("initialize folders...")
@@ -26,7 +28,7 @@ func newOSWalker(r *Repo, root string) *osWalker {
 			"max-entries: %d, root: %q\n",
 			lvlDeep, r.maxEntries, root)
 	}
-	return &osWalker{
+	return &walker{
 		root:    fp.Clean(root), // converts e.g. /foo/ to /foo
 		lvlDeep: lvlDeep,
 		r:       r,
@@ -35,38 +37,20 @@ func newOSWalker(r *Repo, root string) *osWalker {
 	}
 }
 
-func (w *osWalker) add(path string) error {
+func (w *walker) add(path string) error {
 	if w.count == w.r.maxEntries {
 		return errWalkMaxDirEntries
 	}
 	w.count++
-	w.r.updateOrAddPath(path, w.now, true)
+	w.r.updateOrAdd(path, w.now, true)
 	return nil
 }
 
-func (w *osWalker) walk(path string) error {
-	return walk(w.root, path, w.lvlDeep)
+func (w *walker) walk(path string) error {
+	return walkHelper(w.root, path, w.lvlDeep)
 }
 
-func (w *osWalker) toWalkFunc() fp.WalkFunc {
-	return fp.WalkFunc(func(path string, fi os.FileInfo, err error) error {
-		if err != nil {
-			fmt.Printf("fromDirwalker - %v", err)
-			return fp.SkipDir
-		}
-		// no files
-		if !fi.IsDir() {
-			return nil
-		}
-		err = w.walk(path)
-		if err == fp.SkipDir {
-			return err
-		}
-		return w.add(path)
-	})
-}
-
-func walk(root, path string, lvlDeep uint) error {
+func walkHelper(root, path string, lvlDeep uint) error {
 	fileName := fp.Base(path)
 	if fileName == "." || fileName == osSep {
 		return nil
@@ -84,6 +68,24 @@ func walk(root, path string, lvlDeep uint) error {
 		return fp.SkipDir
 	}
 	return nil
+}
+
+func (w *walker) toWalkFunc() fp.WalkFunc {
+	return fp.WalkFunc(func(path string, fi os.FileInfo, err error) error {
+		if err != nil {
+			fmt.Printf("toWalkFunc - %v", err)
+			return fp.SkipDir
+		}
+		// no files
+		if !fi.IsDir() {
+			return nil
+		}
+		err = w.walk(path)
+		if err == fp.SkipDir {
+			return err
+		}
+		return w.add(path)
+	})
 }
 
 func isMaxFolderLevel(levelToWalk uint, root, path string) bool {

@@ -1,3 +1,5 @@
+// +build !android !darwin !windows
+
 package pref
 
 import (
@@ -10,13 +12,13 @@ import (
 	"strings"
 )
 
+// Verbose output
+var Verbose = false
+
 const (
 	maxEntries    = 10000
 	minMaxEntries = 200 // minimal value for the maxEntries variable
 )
-
-// Verbose output
-var Verbose = false
 
 // Pref object.
 type Pref struct {

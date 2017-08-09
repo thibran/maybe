@@ -9,24 +9,24 @@ import (
 	"path/filepath"
 	"strings"
 	"thibaut/maybe/pref"
-	"thibaut/maybe/ratedfolder"
-	"thibaut/maybe/ratedfolder/folder"
+	"thibaut/maybe/rated"
+	"thibaut/maybe/rated/folder"
 	"thibaut/maybe/util"
 	"time"
 )
 
-// TODO move to correct file
 const osSep = string(os.PathSeparator)
 
 var (
-	ignoreSlice          = []string{".git", ".hg", ".svn", ".bzr"}
-	errWalkMaxDirEntries = fmt.Errorf("max entries reached")
-	errNoFile            = fmt.Errorf("file not found")
+	// ErrNoResult - search has no result
+	ErrNoResult = errors.New("no result")
+	ignoreSlice = []string{".git", ".hg", ".svn", ".bzr"}
+	errNoFile   = fmt.Errorf("file not found")
 )
 
 // Repo content is saved to the disk.
 type Repo struct {
-	m          ratedfolder.Map
+	m          rated.Map
 	dataPath   string
 	maxEntries int
 }
@@ -34,7 +34,7 @@ type Repo struct {
 // New repo object.
 func New(path string, maxEntries int) *Repo {
 	return &Repo{
-		m:          make(ratedfolder.Map),
+		m:          make(rated.Map),
 		dataPath:   path,
 		maxEntries: maxEntries,
 	}
@@ -43,13 +43,13 @@ func New(path string, maxEntries int) *Repo {
 // Walk adds directories from root, for count
 // of Repo.maxEntries, osWalker.lvlDeep.
 func (r *Repo) Walk(root string) {
-	w := newOSWalker(r, root)
+	w := newWalker(r, root)
 	err := filepath.Walk(root, w.toWalkFunc())
 	if err != nil && err != errWalkMaxDirEntries {
 		log.Fatalln(err)
 	}
 	if tmp := os.TempDir(); tmp != "" {
-		r.updateOrAddPath(tmp, w.now, true)
+		r.updateOrAdd(tmp, w.now, true)
 	}
 }
 
@@ -64,13 +64,13 @@ func (r *Repo) Add(path string, t time.Time) {
 			util.Logf("ignore: %s\n", path)
 			continue
 		}
-		r.updateOrAddPath(path, t, i > 0)
+		r.updateOrAdd(path, t, i > 0)
 	}
 }
 
-// updateOrAddPath to repository. Sub-folders are added, when unknown, but
+// updateOrAdd to repository. Sub-folders are added, when unknown, but
 // their timestamps are not updated.
-func (r *Repo) updateOrAddPath(path string, t time.Time, subfolder bool) {
+func (r *Repo) updateOrAdd(path string, t time.Time, subfolder bool) {
 	f, ok := r.m[path]
 	// new folder object
 	if !ok {
@@ -96,23 +96,18 @@ func (r *Repo) updateOrAddPath(path string, t time.Time, subfolder bool) {
 		f.UpdateCount++
 	}
 	f.Times = append(f.Times, t)
-	f.Times = ratedfolder.SortAndCut(f.Times...) // keep only data.MaxTimesEntries
+	f.Times = rated.SortAndCut(f.Times...) // keep only data.MaxTimesEntries
 	r.m[path] = f
 }
 
-// List returns all RatedFolders for the query q.
-func (r *Repo) List(q pref.Query, cutLong bool) ratedfolder.RatedFolders {
-	a := ratedfolder.Search(r.m, q.Last, func(a ratedfolder.RatedFolders) { a.Sort() })
-	a.FilterInPathOf(q.Start)
-	a.CutLongPaths(cutLong)
-	return a
+// ResourceChecker returns true when a resource exists.
+type ResourceChecker interface {
+	DoesExist(string) bool
 }
 
-var ErrNoResult = errors.New("no result")
-
 // Search repo for query.
-func (r *Repo) Search(ch ratedfolder.ResourceChecker, q pref.Query) (*ratedfolder.RatedFolder, error) {
-	a := ratedfolder.Search(r.m, q.Last, func(a ratedfolder.RatedFolders) { a.Sort() })
+func (r *Repo) Search(ch ResourceChecker, q pref.Query) (*rated.Rated, error) {
+	a := r.m.Search(q.Last, func(a rated.Slice) { a.Sort() })
 	a.FilterInPathOf(q.Start)
 	for _, v := range a {
 		// keep not found folders, they might re-exist in future
@@ -122,6 +117,14 @@ func (r *Repo) Search(ch ratedfolder.ResourceChecker, q pref.Query) (*ratedfolde
 		}
 	}
 	return nil, ErrNoResult
+}
+
+// List returns all RatedSlice for the query q.
+func (r *Repo) List(q pref.Query, cutLong bool) rated.Slice {
+	a := r.m.Search(q.Last, func(a rated.Slice) { a.Sort() })
+	a.FilterInPathOf(q.Start)
+	a.CutLongPaths(cutLong)
+	return a
 }
 
 // Size of the repository.

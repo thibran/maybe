@@ -1,16 +1,16 @@
-package ratedfolder
+package rated
 
 import (
 	"testing"
 	"thibaut/maybe/classify"
-	"thibaut/maybe/ratedfolder/folder"
+	"thibaut/maybe/rated/folder"
 	"time"
 )
 
-func TestTimeRatedSort(t *testing.T) {
+func TestTimeSort(t *testing.T) {
 	now := time.Now()
-	rated := func(path string, timePoints uint, count uint32) *RatedFolder {
-		return &RatedFolder{
+	rated := func(path string, timePoints uint, count uint32) *Rated {
+		return &Rated{
 			Rating: &classify.Rating{TimePoints: timePoints},
 			Folder: &folder.Folder{Path: path, UpdateCount: count,
 				Times: []time.Time{now}},
@@ -18,14 +18,14 @@ func TestTimeRatedSort(t *testing.T) {
 	}
 	tt := []struct {
 		name, exp string
-		folders   RatedTimeFolders
+		folders   TimeSlice
 	}{
-		{name: "by time points", exp: "/home/foo", folders: RatedTimeFolders{
+		{name: "by time points", exp: "/home/foo", folders: TimeSlice{
 			rated("/home/bar", 4, 1),
 			rated("/home/foo", 10, 1),
 			rated("/home/zot", 8, 1),
 		}},
-		{name: "by time count", exp: "/b", folders: RatedTimeFolders{
+		{name: "by time count", exp: "/b", folders: TimeSlice{
 			rated("/a", 20, 1),
 			rated("/b", 20, 2),
 		}},

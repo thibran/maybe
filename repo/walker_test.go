@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestWalk(t *testing.T) {
+func TestWalkHelper(t *testing.T) {
 	// verbose = true
 	root := "/foo"
 	j := filepath.Join
@@ -24,7 +24,7 @@ func TestWalk(t *testing.T) {
 	var lvlDeep uint = 1
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			err := walk(root, tc.path, lvlDeep)
+			err := walkHelper(root, tc.path, lvlDeep)
 			if err != tc.exp {
 				t.Fatalf("exp %q, got %v - for: %q", tc.exp, err, tc.path)
 			}

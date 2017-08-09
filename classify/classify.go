@@ -60,12 +60,12 @@ func classifyTime(a ...time.Time) uint {
 	var n uint
 	now := time.Now()
 	for _, t := range a {
-		n += timeValue(now, t)
+		n += timeHelper(now, t)
 	}
 	return n
 }
 
-func timeValue(now, t time.Time) uint {
+func timeHelper(now, t time.Time) uint {
 	beforeNow := func(n time.Duration) bool {
 		return now.Before(t.Add(n))
 	}
