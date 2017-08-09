@@ -10,44 +10,43 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"thibaut/maybe/pref"
+	"thibaut/maybe/ratedfolder"
+	"thibaut/maybe/ratedfolder/folder"
+	"thibaut/maybe/repo"
+	"thibaut/maybe/util"
 	"time"
 )
 
-const (
-	appVersion    = "0.3.2"
-	maxEntries    = 10000
-	minMaxEntries = 200 // minimal value for the maxEntries variable
-)
-
-var verbose = false
+const appVersion = "0.3.2"
 
 func main() {
-	p := parse()
-	r := NewRepo(filepath.Join(p.dataDir, "maybe.data"), p.maxEntries)
-	r.LoadData(p.dataDir)
+	p := pref.Parse()
+	r := repo.New(filepath.Join(p.DataDir, "maybe.data"), p.MaxEntries)
+	r.LoadData(p.DataDir)
 	// version
-	if p.version {
-		handleVersion(r, p.dataDir)
+	if p.Version {
+		handleVersion(r, p.DataDir)
 		return
 	}
 	// init
-	if p.init {
-		handleInit(r, p.homeDir)
+	if p.Init {
+		handleInit(r, p.HomeDir)
 		return
 	}
 	// add path
-	if p.add != "" {
-		handleAdd(r, p.add)
+	if p.Add != "" {
+		handleAdd(r, p.Add)
 		return
 	}
 	// search
-	if p.search.isNotEmpty() {
-		handleSearch(r, p.search)
+	if p.Search.IsNotEmpty() {
+		handleSearch(r, p.Search)
 		return
 	}
 	// list
-	if p.list.isNotEmpty() {
-		handleList(r, p.list)
+	if p.List.IsNotEmpty() {
+		handleList(r, p.List)
 		return
 	}
 	fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
@@ -55,29 +54,16 @@ func main() {
 	os.Exit(1)
 }
 
-// LoadData from dataDir or create directory.
-func (r *Repo) LoadData(dataDir string) {
-	if err := r.Load(); err != nil {
-		if err != errNoFile {
-			log.Fatalln(err)
-		}
-		// create data dir, if not existent
-		if err := os.MkdirAll(dataDir, 0770); err != nil {
-			log.Fatalf("main - create data dir: %s\n", err)
-		}
-	}
-}
-
-func handleVersion(r *Repo, dataDir string) {
+func handleVersion(r *repo.Repo, dataDir string) {
 	fmt.Printf("maybe %s   entries: %d   %s\n",
 		appVersion, r.Size(), runtime.Version())
 
-	if verbose {
+	if pref.Verbose {
 		fmt.Printf("\nDataDir: %s\n", dataDir)
 	}
 }
 
-func handleInit(r *Repo, homeDir string) {
+func handleInit(r *repo.Repo, homeDir string) {
 	r.Walk(homeDir)
 	if err := r.Save(); err != nil {
 		log.Fatalf("handleInit failed with: %v\n", err)
@@ -85,7 +71,7 @@ func handleInit(r *Repo, homeDir string) {
 	fmt.Println("entries:", r.Size())
 }
 
-func handleAdd(r *Repo, path string) {
+func handleAdd(r *repo.Repo, path string) {
 	if strings.TrimSpace(path) == "" {
 		return
 	}
@@ -95,38 +81,38 @@ func handleAdd(r *Repo, path string) {
 	}
 }
 
-func handleSearch(r *Repo, q query) {
+func handleSearch(r *repo.Repo, q pref.Query) {
 	// return path-query directly
-	if q.start == "" && strings.HasPrefix(q.last, "/") {
-		fmt.Println(q.last)
+	if q.Start == "" && strings.HasPrefix(q.Last, "/") {
+		fmt.Println(q.Last)
 		return
 	}
-	rf, err := r.Search(folderChecker(), q)
+	rf, err := r.Search(folder.CheckerFn(), q)
 	if err != nil {
 		// all okay
-		if err == errNoResult {
+		if err == repo.ErrNoResult {
 			os.Exit(1)
 		}
 		// hell should freez
-		logln(err)
+		util.Logln(err)
 		os.Exit(2)
 	}
 	fmt.Println(rf.Path)
 }
 
-func handleList(r *Repo, q query) {
+func handleList(r *repo.Repo, q pref.Query) {
 	a := r.List(q, true)
 	if len(a) == 0 {
 		return
 	}
 	var res []string
-	res = append(res, normalOrVerbose("Rating\tFolder", "Time\tText\tFolder"))
-	pathExistFn := folderChecker()
-	appendFn := func(rf *RatedFolder) {
-		res = append(res, normalOrVerbose(
-			fmt.Sprintf("%d\t%s", rf.points(), rf.Path),
-			fmt.Sprintf("%d\t%d\t%s", rf.timePoints,
-				rf.similarityPoints, rf.Path)))
+	res = append(res, util.NormalOrVerbose("Rating\tFolder", "Time\tText\tFolder"))
+	pathExistFn := folder.CheckerFn()
+	appendFn := func(rf *ratedfolder.RatedFolder) {
+		res = append(res, util.NormalOrVerbose(
+			fmt.Sprintf("%d\t%s", rf.Points(), rf.Path),
+			fmt.Sprintf("%d\t%d\t%s", rf.TimePoints,
+				rf.SimilarityPoints, rf.Path)))
 	}
 	entries := 0
 	entryLimit := 8

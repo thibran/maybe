@@ -1,4 +1,4 @@
-package main
+package pref
 
 import (
 	"flag"
@@ -10,55 +10,67 @@ import (
 	"strings"
 )
 
-type pref struct {
-	dataDir, homeDir, add string
-	list, search          query
-	version, init         bool
-	maxEntries            int
+const (
+	maxEntries    = 10000
+	minMaxEntries = 200 // minimal value for the maxEntries variable
+)
+
+// Verbose output
+var Verbose = false
+
+// Pref object.
+type Pref struct {
+	DataDir, HomeDir, Add string
+	List, Search          Query
+	Version, Init         bool
+	MaxEntries            int
 }
 
-func parse() pref {
+// Parse flags.
+func Parse() Pref {
 	homeDir := userHome()
 	dataDir := filepath.Join(homeDir, ".local/share/maybe")
 
-	var p pref
-	p.homeDir = homeDir
-	flagDatadirVar(&p.dataDir, "datadir", dataDir, "")
-	flag.StringVar(&p.add, "add", "", "add path to index")
+	var p Pref
+	p.HomeDir = homeDir
+	flagDatadirVar(&p.DataDir, "datadir", dataDir, "")
+	flag.StringVar(&p.Add, "add", "", "add path to index")
 	q := flag.String("search", "", "search for keyword")
 	l := flag.String("list", "", "list results for keyword")
-	flag.BoolVar(&p.init, "init", false, "scan $HOME and add folders (six folder-level deep)")
-	flag.BoolVar(&p.version, "version", false, "print maybe version")
-	flagMaxentriesVar(&p.maxEntries, "max-entries", maxEntries, "maximum unique path-entries")
+	flag.BoolVar(&p.Init, "init", false, "scan $HOME and add folders (six folder-level deep)")
+	flag.BoolVar(&p.Version, "version", false, "print maybe version")
+	flagMaxentriesVar(&p.MaxEntries, "max-entries", maxEntries, "maximum unique path-entries")
 	verb := flag.Bool("v", false, "verbose")
 	flag.Parse()
 
-	p.search = queryFrom(*q)
-	p.list = queryFrom(*l)
+	p.Search = queryFrom(*q)
+	p.List = queryFrom(*l)
 
-	verbose = *verb
+	Verbose = *verb
 	return p
 }
 
-type query struct {
-	start, last string
+// Query object
+type Query struct {
+	Start, Last string
 }
 
-func (q *query) isNotEmpty() bool { return len(q.last) > 0 }
+// IsNotEmpty returns true if Query.Last contains data.
+func (q *Query) IsNotEmpty() bool { return len(q.Last) > 0 }
 
-func (q query) String() string {
-	return fmt.Sprintf("{start: %s  last: %s}", q.start, q.last)
+func (q Query) String() string {
+	return fmt.Sprintf("{start: %s  last: %s}", q.Start, q.Last)
 }
 
-func queryFrom(s string) query {
+func queryFrom(s string) Query {
 	s = strings.TrimSpace(s)
 	if s == "" {
-		return query{}
+		return Query{}
 	}
 	if arg := flag.Args(); len(arg) > 0 {
-		return query{start: s, last: arg[0]}
+		return Query{Start: s, Last: arg[0]}
 	}
-	return query{last: s}
+	return Query{Last: s}
 }
 
 func userHome() string {

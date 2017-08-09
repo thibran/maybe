@@ -1,10 +1,11 @@
-package main
+package repo
 
 import (
 	"fmt"
 	"os"
 	fp "path/filepath"
 	"strings"
+	"thibaut/maybe/pref"
 	"time"
 )
 
@@ -18,7 +19,7 @@ type osWalker struct {
 
 func newOSWalker(r *Repo, root string) *osWalker {
 	var lvlDeep uint = 6
-	if !verbose {
+	if !pref.Verbose {
 		fmt.Println("initialize folders...")
 	} else {
 		fmt.Printf("initialize folders, %d level deep, "+

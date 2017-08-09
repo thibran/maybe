@@ -1,4 +1,4 @@
-package main
+package util
 
 import (
 	"testing"
@@ -22,7 +22,7 @@ func TestShortenPath(t *testing.T) {
 	rlen := utf8.RuneCountInString
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			res := shortenPath(tc.path, tc.maxlen)
+			res := ShortenPath(tc.path, tc.maxlen)
 			if rlen(res) > tc.maxlen {
 				t.Fatalf("should be not longer than %d, but is %d",
 					tc.maxlen, rlen(res))

@@ -1,31 +1,37 @@
 // +build !android !darwin !windows
 
-package main
+package util
 
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"thibaut/maybe/pref"
 	"unicode/utf8"
 )
 
-func logf(format string, a ...interface{}) {
-	if verbose {
+const osSep = string(os.PathSeparator)
+
+// Logf prints to stdout if pref.Verbose is true.
+func Logf(format string, a ...interface{}) {
+	if pref.Verbose {
 		fmt.Printf(format, a...)
 	}
 }
 
-func logln(a ...interface{}) {
-	if verbose {
+// Logln prints to stdout if pref.Verbose is true.
+func Logln(a ...interface{}) {
+	if pref.Verbose {
 		fmt.Println(a...)
 	}
 }
 
-// shortenPath when necessary, tries to keep the last two segments intact.
-func shortenPath(p string, max int) string {
+// ShortenPath when necessary, tries to keep the last two segments intact.
+func ShortenPath(p string, max int) string {
 	rlen := utf8.RuneCountInString
 	{
 		pathLen := rlen(p)
@@ -56,7 +62,8 @@ func shortenPath(p string, max int) string {
 	return filepath.Join(res, "...", last)
 }
 
-func termWidth() (int, error) {
+// TermWidth returns the terminal with.
+func TermWidth() (int, error) {
 	cmd := exec.Command("tput", "cols")
 	buf, err := cmd.Output()
 	if err != nil {
@@ -70,8 +77,9 @@ func termWidth() (int, error) {
 	return width, nil
 }
 
-func normalOrVerbose(normal, verb string) string {
-	if !verbose {
+// NormalOrVerbose returns the normal string if Pref.Verbose is not true.
+func NormalOrVerbose(normal, verb string) string {
+	if !pref.Verbose {
 		return normal
 	}
 	return verb

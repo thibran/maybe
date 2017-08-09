@@ -1,4 +1,4 @@
-package main
+package classify
 
 import (
 	"fmt"
@@ -9,152 +9,151 @@ import (
 )
 
 const (
-	timeLessThanMinute      = 42
-	timeLessThanFiveMinutes = 39
-	timeLessThanHour        = 36
-	timeLessThanSixHours    = 33
-	timeLessThanTwelveHours = 30
-	timeLessThanDay         = 27
-	timeLessThanTwoDays     = 24
-	timeLessThanWeek        = 21
-	timeLessThanTwoWeeks    = 18
-	timeLessThanMonth       = 15
-	timeLessThanTwoMonths   = 12
-	timeLessThanSixMonths   = 9
-	timeLessThanYear        = 6
-	timeOlderThanAYear      = 0
+	TimeLessThanMinute      = 42
+	TimeLessThanFiveMinutes = 39
+	TimeLessThanHour        = 36
+	TimeLessThanSixHours    = 33
+	TimeLessThanTwelveHours = 30
+	TimeLessThanDay         = 27
+	TimeLessThanTwoDays     = 24
+	TimeLessThanWeek        = 21
+	TimeLessThanTwoWeeks    = 18
+	TimeLessThanMonth       = 15
+	TimeLessThanTwoMonths   = 12
+	TimeLessThanSixMonths   = 9
+	TimeLessThanYear        = 6
+	TimeOlderThanAYear      = 0
 
-	strEquals          = 200 // 160
-	strEqualsWrongCase = 100 // 80
-	strStartsWith      = 80  // 70
-	strEndsWith        = 60
-	strContains        = 40
-	strSimilar         = 20
-	noMatch            = 0
+	StrEquals          = 200 // 160
+	StrEqualsWrongCase = 100 // 80
+	StrStartsWith      = 80  // 70
+	StrEndsWith        = 60
+	StrContains        = 40
+	StrSimilar         = 20
+	NoMatch            = 0
 )
 
 // Rating of a search query
 type Rating struct {
-	timePoints       uint
-	similarityPoints uint
+	TimePoints       uint
+	SimilarityPoints uint
 }
 
-// points return the point sum of a rateing.
+// Points return the point sum of a rateing.
 // If no similarity is found, time points are ignored.
-func (r *Rating) points() uint {
-	return r.similarityPoints + r.timePoints
+func (r *Rating) Points() uint {
+	return r.SimilarityPoints + r.TimePoints
 }
 
 // NewRating rates search-term s for path p within time-slice a.
 func NewRating(s, p string, a ...time.Time) (*Rating, error) {
 	base := path.Base(p)
-	n := rateSimilarity(base, s)
-	if n == noMatch {
+	n := classifyText(base, s)
+	if n == NoMatch {
 		return nil, fmt.Errorf("NewRating - similarity: noMatch")
 	}
-	timeRate := ratePassedTime(a...)
-	return &Rating{similarityPoints: n, timePoints: timeRate}, nil
+	timeRate := classifyTime(a...)
+	return &Rating{SimilarityPoints: n, TimePoints: timeRate}, nil
 }
 
-func ratePassedTime(a ...time.Time) uint {
+func classifyTime(a ...time.Time) uint {
 	var n uint
 	now := time.Now()
 	for _, t := range a {
-		n += rateTime(now, t)
+		n += timeValue(now, t)
 	}
 	return n
 }
 
-func rateTime(now, t time.Time) uint {
+func timeValue(now, t time.Time) uint {
 	beforeNow := func(n time.Duration) bool {
 		return now.Before(t.Add(n))
 	}
 	// < minute
 	if beforeNow(time.Minute) {
-		return timeLessThanMinute
+		return TimeLessThanMinute
 	}
 	// < 5 min
 	if beforeNow(time.Minute * 5) {
-		return timeLessThanFiveMinutes
+		return TimeLessThanFiveMinutes
 	}
 	// < hour
 	if beforeNow(time.Hour) {
-		return timeLessThanHour
+		return TimeLessThanHour
 	}
 	// < 6 hours
 	if beforeNow(time.Hour * 6) {
-		return timeLessThanSixHours
+		return TimeLessThanSixHours
 	}
 	// < 12 hours
 	if beforeNow(time.Hour * 12) {
-		return timeLessThanTwelveHours
+		return TimeLessThanTwelveHours
 	}
 	// < day
 	if beforeNow(time.Hour * 24) {
-		return timeLessThanDay
+		return TimeLessThanDay
 	}
 	// < 2 days
 	if beforeNow(time.Hour * 48) {
-		return timeLessThanTwoDays
+		return TimeLessThanTwoDays
 	}
 	// < week
 	if beforeNow(time.Hour * 24 * 7) {
-		return timeLessThanWeek
+		return TimeLessThanWeek
 	}
 	// < 2 weeks
 	if beforeNow(time.Hour * 24 * 7 * 2) {
-		return timeLessThanTwoWeeks
+		return TimeLessThanTwoWeeks
 	}
 	// < month
 	if beforeNow(time.Hour * 24 * 7 * 4) {
-		return timeLessThanMonth
+		return TimeLessThanMonth
 	}
 	// < 2 months
 	if beforeNow(time.Hour * 24 * 7 * 4 * 2) {
-		return timeLessThanTwoMonths
+		return TimeLessThanTwoMonths
 	}
 	// < 6 months
 	if beforeNow(time.Hour * 24 * 7 * 4 * 6) {
-		return timeLessThanSixMonths
+		return TimeLessThanSixMonths
 	}
 	// < year
 	if beforeNow(time.Hour * 24 * 7 * 4 * 12) {
-		return timeLessThanYear
+		return TimeLessThanYear
 	}
-	return timeOlderThanAYear
+	return TimeOlderThanAYear
 }
 
-// if len(s) is combined in word -> strContains
-func rateSimilarity(base, query string) uint {
+func classifyText(base, query string) uint {
 	if base == query {
-		return strEquals
+		return StrEquals
 	}
 	base = strings.ToLower(base)
 	query = strings.ToLower(query)
 	// equals wrong case
 	if base == query {
-		return strEqualsWrongCase
+		return StrEqualsWrongCase
 	}
 	// starts with
 	if strings.HasPrefix(base, query) {
-		return strStartsWith
+		return StrStartsWith
 	}
 	// ends with
 	if strings.HasSuffix(base, query) {
-		return strEndsWith
+		return StrEndsWith
 	}
 	// does base even contain s?
 	if strings.Contains(base, query) {
-		return strContains
+		return StrContains
 	}
-	return strSimilarity(base, query)
+	return similarity(base, query)
 }
 
-func strSimilarity(base, query string) uint {
+func similarity(base, query string) uint {
 	baseLen := utf8.RuneCountInString(base)
 	// don't compare too short words
 	if baseLen < 3 {
-		return noMatch
+		return NoMatch
 	}
 
 	var maxdiff int
@@ -178,7 +177,7 @@ func strSimilarity(base, query string) uint {
 	}
 
 	if diff <= maxdiff {
-		return strSimilar
+		return StrSimilar
 	}
-	return noMatch
+	return NoMatch
 }
