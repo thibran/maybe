@@ -1,0 +1,44 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "taskName": "gotest",
+            "type": "shell",
+            "command": "go test ./...",
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "problemMatcher": ["$go"],
+            "presentation": {
+                "focus": true,
+                "panel": "new"
+            }
+        },
+        {
+            "taskName": "build",
+            "type": "shell",
+            "command": "go build",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": ["$go"],
+            "presentation": {
+                "focus": true,
+                "panel": "new"
+            }
+        },
+        {
+            "taskName": "build ARM",
+            "type": "shell",
+            "command": "env GOOS=linux GOARCH=arm GOARM=7 go build",
+            "problemMatcher": ["$go"],
+            "presentation": {
+                "focus": true,
+                "panel": "new"
+            }
+        }
+    ]
+}
