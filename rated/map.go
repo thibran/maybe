@@ -1,9 +1,11 @@
 package rated
 
 import (
+	"runtime"
 	"sync"
-	"thibaut/maybe/classify"
-	"thibaut/maybe/rated/folder"
+
+	"github.com/thibran/maybe/classify"
+	"github.com/thibran/maybe/rated/folder"
 )
 
 // Map type alias
@@ -17,18 +19,20 @@ func (m *Map) Search(query string, sort sorterFn) Slice {
 		return Slice{}
 	}
 	var wg sync.WaitGroup
-	workers := 32
+	workers := runtime.NumCPU()
 	if len(*m) < workers {
 		workers = len(*m)
 	}
 	wg.Add(workers)
 
 	tasks := createTasks(*m)
-	results := make(chan *Rated)
+	results := make(chan *Rated, workers+1)
+	// results := make(chan *Rated)
 	go func() {
 		wg.Wait()
 		close(results)
 	}()
+
 	for i := 0; i < workers; i++ {
 		go func() {
 			for f := range tasks {

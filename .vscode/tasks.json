@@ -3,7 +3,7 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "taskName": "gotest",
+            "label": "gotest",
             "type": "shell",
             "command": "go test ./...",
             "group": {
@@ -17,7 +17,7 @@
             }
         },
         {
-            "taskName": "build",
+            "label": "build",
             "type": "shell",
             "command": "go build",
             "group": {

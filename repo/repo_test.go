@@ -4,26 +4,29 @@ import (
 	"math"
 	"strings"
 	"testing"
-	"thibaut/maybe/pref"
-	"thibaut/maybe/rated"
-	"thibaut/maybe/rated/folder"
 	"time"
+
+	"github.com/thibran/maybe/pref"
+	"github.com/thibran/maybe/rated"
+	"github.com/thibran/maybe/rated/folder"
 )
 
 var _ ResourceChecker = (*folder.ResourceCheckerFn)(nil)
 
 func TestAdd(t *testing.T) {
-	//verbose = true
+	// pref.Verbose = true
 	r := New("/baz/bar/zot", 10)
 	r.Add("/tmp/zot/hot", time.Now())
 	r.Add("/tmp/zot", time.Now())
-	if len(r.m) != 3 {
-		t.Fatalf("exp 3, got %v", len(r.m))
+	// r.Add("/home/tux/Music/ogg/ogg-non-free/Sister Sin - True Sound Of The Underground", time.Now())
+	exp := 3
+	if len(r.m) != exp {
+		t.Fatalf("exp %d, got %v", exp, len(r.m))
 	}
 }
 
 func TestAdd_ignoreFolders(t *testing.T) {
-	// verbose = true
+	// pref.Verbose = true
 	r := New("/baz/bar/zot", 10)
 	r.Add("/tmp/.git", time.Now())
 	if _, ok := r.m["/tmp"]; !ok {
@@ -35,7 +38,7 @@ func TestAdd_ignoreFolders(t *testing.T) {
 }
 
 func TestAdd_updateExisting(t *testing.T) {
-	// verbose = true
+	// pref.Verbose = true
 	r := New("/baz/bar/zot", 10)
 	now := time.Now()
 	fo := folder.New("/home/foo", time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC))
@@ -55,7 +58,9 @@ func TestAdd_updateExisting(t *testing.T) {
 }
 
 func TestUpdateOrAdd(t *testing.T) {
-	// verbose = true
+	// pref.Verbose = true
+	// longPath := "/home/tux/Music/ogg/ogg-non-free/Sister Sin - True Sound Of The Underground"
+
 	tt := []struct {
 		name                   string
 		maxEntries, expEntries int
@@ -94,7 +99,7 @@ func TestUpdateOrAdd(t *testing.T) {
 }
 
 func TestSearch(t *testing.T) {
-	// verbose = true
+	// pref.Verbose = true
 	type path struct {
 		p string
 		t time.Time
@@ -146,7 +151,7 @@ func TestSearch(t *testing.T) {
 }
 
 func TestList(t *testing.T) {
-	// verbose = true
+	// pref.Verbose = true
 	now := time.Now()
 	type path struct {
 		p string

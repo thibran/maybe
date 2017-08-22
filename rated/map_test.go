@@ -2,8 +2,9 @@ package rated
 
 import (
 	"testing"
-	"thibaut/maybe/rated/folder"
 	"time"
+
+	"github.com/thibran/maybe/rated/folder"
 )
 
 func TestRemoveOldest(t *testing.T) {

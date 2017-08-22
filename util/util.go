@@ -10,8 +10,9 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"thibaut/maybe/pref"
 	"unicode/utf8"
+
+	"github.com/thibran/maybe/pref"
 )
 
 const osSep = string(os.PathSeparator)

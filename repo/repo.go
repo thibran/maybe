@@ -8,11 +8,12 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"thibaut/maybe/pref"
-	"thibaut/maybe/rated"
-	"thibaut/maybe/rated/folder"
-	"thibaut/maybe/util"
 	"time"
+
+	"github.com/thibran/maybe/pref"
+	"github.com/thibran/maybe/rated"
+	"github.com/thibran/maybe/rated/folder"
+	"github.com/thibran/maybe/util"
 )
 
 const osSep = string(os.PathSeparator)

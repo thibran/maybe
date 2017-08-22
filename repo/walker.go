@@ -5,8 +5,9 @@ import (
 	"os"
 	fp "path/filepath"
 	"strings"
-	"thibaut/maybe/pref"
 	"time"
+
+	"github.com/thibran/maybe/pref"
 )
 
 var errWalkMaxDirEntries = fmt.Errorf("max entries reached")

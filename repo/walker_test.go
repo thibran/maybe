@@ -6,7 +6,7 @@ import (
 )
 
 func TestWalkHelper(t *testing.T) {
-	// verbose = true
+	// pref.Verbose = true
 	root := "/foo"
 	j := filepath.Join
 	ignoreSlice = append(ignoreSlice, "_a")

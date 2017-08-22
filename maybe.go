@@ -8,15 +8,16 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-	"thibaut/maybe/pref"
-	"thibaut/maybe/rated"
-	"thibaut/maybe/rated/folder"
-	"thibaut/maybe/repo"
-	"thibaut/maybe/util"
 	"time"
+
+	"github.com/thibran/maybe/pref"
+	"github.com/thibran/maybe/rated"
+	"github.com/thibran/maybe/rated/folder"
+	"github.com/thibran/maybe/repo"
+	"github.com/thibran/maybe/util"
 )
 
-const appVersion = "0.3.3"
+const appVersion = "0.4"
 
 func main() {
 	p := pref.Parse()
@@ -95,7 +96,7 @@ func handleSearch(r *repo.Repo, q pref.Query) {
 		util.Logln(err)
 		os.Exit(2)
 	}
-	fmt.Println(rf.Path)
+	fmt.Printf(rf.Path)
 }
 
 func handleList(r *repo.Repo, q pref.Query) {

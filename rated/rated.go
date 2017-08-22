@@ -6,10 +6,11 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
-	"thibaut/maybe/classify"
-	"thibaut/maybe/pref"
-	"thibaut/maybe/rated/folder"
-	"thibaut/maybe/util"
+
+	"github.com/thibran/maybe/classify"
+	"github.com/thibran/maybe/pref"
+	"github.com/thibran/maybe/rated/folder"
+	"github.com/thibran/maybe/util"
 )
 
 // Rated object.

@@ -6,13 +6,14 @@ import (
 	"log"
 	"os"
 	"testing"
-	"thibaut/maybe/rated"
-	"thibaut/maybe/rated/folder"
 	"time"
+
+	"github.com/thibran/maybe/rated"
+	"github.com/thibran/maybe/rated/folder"
 )
 
 func TestLoadFile(t *testing.T) {
-	// verbose = true
+	// pref.Verbose = true
 	tmp, err := ioutil.TempFile("", "maybe.data_")
 	if err != nil {
 		log.Fatal(err)
@@ -30,7 +31,7 @@ func TestLoadFile(t *testing.T) {
 }
 
 func TestLoadGzip(t *testing.T) {
-	// verbose = true
+	// pref.Verbose = true
 	var buf bytes.Buffer
 	m := rated.Map{"/foo": folder.New("/foo", time.Now())}
 	saveGzip(&buf, m)
@@ -44,7 +45,7 @@ func TestLoadGzip(t *testing.T) {
 }
 
 func TestSave(t *testing.T) {
-	// verbose = true
+	// pref.Verbose = true
 	tmp, err := ioutil.TempFile("", "maybe.data_")
 	if err != nil {
 		log.Fatal(err)
@@ -57,7 +58,7 @@ func TestSave(t *testing.T) {
 }
 
 func TestSaveGzip(t *testing.T) {
-	// verbose = true
+	// pref.Verbose = true
 	var buf bytes.Buffer
 	m := rated.Map{"/foo": folder.New("/foo", time.Now())}
 	if err := saveGzip(&buf, m); err != nil {

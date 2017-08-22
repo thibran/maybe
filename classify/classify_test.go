@@ -6,13 +6,20 @@ import (
 )
 
 func TestClassifyText(t *testing.T) {
-	// verbose = true
+	// pref.Verbose = true
 	tt := []struct {
 		name, base, query string
 		exp               uint
+		insensitive       bool
 	}{
-		{name: "equals", base: "foo", query: "foo", exp: StrEquals},
-		{name: "wrong case", base: "Foo", query: "foo", exp: StrEqualsWrongCase},
+		{name: "equals 1", base: "foo", query: "foo", exp: StrEquals},
+		{name: "equals 2", base: ".foo", query: ".foo", exp: StrEquals},
+		{name: "equals 3", base: ".foo", query: "foo", exp: StrEquals},
+
+		{name: "wrong case 1", base: "Foo", query: "foo",
+			exp: StrEqualsWrongCase},
+		{name: "wrong case 2", base: "Sync", query: "Sync",
+			exp: StrEqualsWrongCase, insensitive: true},
 
 		{name: "no match 1", base: "foo", query: "Bar", exp: NoMatch},
 		{name: "no match 2", base: "pubip", query: "book", exp: NoMatch},
@@ -23,15 +30,36 @@ func TestClassifyText(t *testing.T) {
 		{name: "ends with", base: "superfoo", query: "foo", exp: StrEndsWith},
 
 		{name: "contains", base: "nfooD", query: "foo", exp: StrContains},
-
-		{name: "similar 1", base: "Bar", query: "bao", exp: StrSimilar},
-		{name: "similar 2", base: "Bar", query: "bart", exp: StrSimilar},
-		{name: "similar 3", base: "HubertVomSchuh", query: "Hub3rtV@mSchu", exp: StrSimilar},
 	}
 
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			n := classifyText(tc.base, tc.query)
+			n := classifyText(tc.base, tc.query, !tc.insensitive)
+			if n != tc.exp {
+				t.Errorf("%s - exp %v, got %v", tc.name, tc.exp, n)
+			}
+		})
+	}
+}
+
+func TestSimilarity(t *testing.T) {
+	// pref.Verbose = true
+	tt := []struct {
+		name, base, query string
+		exp               uint
+	}{
+		{name: "similar 1",
+			base: "bar", query: "bao", exp: StrSimilar},
+		{name: "similar 2",
+			base: "bar", query: "bart", exp: StrSimilar},
+		{name: "similar 3",
+			base: "hubertvomschuh", query: "hub3rtv@mschu", exp: StrSimilar},
+		{name: "similar 4",
+			base: "foo", query: ".foo", exp: StrSimilar},
+	}
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			n := similarity(tc.base, tc.query)
 			if n != tc.exp {
 				t.Errorf("%s - exp %v, got %v", tc.name, tc.exp, n)
 			}
@@ -40,7 +68,7 @@ func TestClassifyText(t *testing.T) {
 }
 
 func TestTimeHelper(t *testing.T) {
-	// verbose = true
+	// pref.Verbose = true
 	tt := []struct {
 		name               string
 		nowTime, otherTime time.Time

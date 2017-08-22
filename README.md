@@ -1,23 +1,22 @@
 maybe
 =====
 
-version: 0.3.3
+version: 0.4
 
-TODO
-====
+jump to known folder on the command-line
 
-- -r  remove current dir from index
-- maybe replace time rating with: fewer seconds from now > better
-   if a time value is not present, add penalty
-- write fish completion, using --show with a sub-command
-   http://fishshell.com/docs/current/index.html#completion-own
-   https://stackoverflow.com/questions/16657803/creating-autocomplete-script-with-sub-commands
-   https://github.com/fish-shell/fish-shell/issues/1217#issuecomment-31441757
+[![asciicast](https://asciinema.org/a/dN7G7dd4GHRiCXMS07CR8GlRg.png)](https://asciinema.org/a/dN7G7dd4GHRiCXMS07CR8GlRg)
 
-fish shell function
--------------------
 
-To search, create a fish-function with `funced m` and insert:
+Tested on openSUSE Tumbleweed & Ubuntu.
+
+Setup
+=====
+
+Fish Shell
+----------
+
+Create a fish-function with `funced m` and insert:
 
 ```
 function m
@@ -41,8 +40,8 @@ function m
 end
 ```
 
-To automatically add visited folders edit
-`~/.config/fish/config.fish` and insert:
+To automatically add visited folders to `maybe`, edit
+your `~/.config/fish/config.fish`:
 
 ```
 function m_on_pwd --on-variable PWD
@@ -50,10 +49,25 @@ function m_on_pwd --on-variable PWD
 end
 ```
 
-To check which other query results are known to maybe:
+To list the query results without jumping to the top match:
 
 ```
 function mm
         maybe -list $argv
 end
 ```
+
+Save both newly created fish functions with:
+
+```
+funcsave m
+funcsave mm
+```
+
+TODO
+====
+
+- write fish completion, using --show with a sub-command
+   http://fishshell.com/docs/current/index.html#completion-own
+   https://stackoverflow.com/questions/16657803/creating-autocomplete-script-with-sub-commands
+   https://github.com/fish-shell/fish-shell/issues/1217#issuecomment-31441757

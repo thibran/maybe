@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 	"unicode/utf8"
+
+	"github.com/thibran/maybe/pref"
 )
 
 const (
@@ -48,7 +50,7 @@ func (r *Rating) Points() uint {
 // NewRating rates search-term s for path p within time-slice a.
 func NewRating(s, p string, a ...time.Time) (*Rating, error) {
 	base := path.Base(p)
-	n := classifyText(base, s)
+	n := classifyText(base, s, pref.CaseSensitive)
 	if n == NoMatch {
 		return nil, fmt.Errorf("NewRating - similarity: noMatch")
 	}
@@ -124,8 +126,17 @@ func timeHelper(now, t time.Time) uint {
 	return TimeOlderThanAYear
 }
 
-func classifyText(base, query string) uint {
-	if base == query {
+// classifyText compares base to the query sting.
+// If the case is determined is set using the sensitive bool.
+func classifyText(base, query string, sensitive bool) uint {
+	// remove leading dot from base if not found in query
+	if r := []rune(query); len(r) > 0 && r[0] != '.' {
+		if r := []rune(base); len(r) > 0 && r[0] == '.' {
+			base = strings.Replace(base, ".", "", 1)
+		}
+	}
+	// equals
+	if sensitive && base == query {
 		return StrEquals
 	}
 	base = strings.ToLower(base)
@@ -164,10 +175,13 @@ func similarity(base, query string) uint {
 	} else {
 		maxdiff = 3
 	}
-
 	// find differences, e.g.: foo & foa are similare
 	var diff int
 	runes := []rune(query)
+	// remove leading dot rune
+	if len(runes) > 0 && runes[0] == '.' {
+		runes = runes[1:]
+	}
 	searchLen := len(runes)
 	for k, v := range base {
 		if k < searchLen && v == runes[k] {
@@ -175,7 +189,6 @@ func similarity(base, query string) uint {
 		}
 		diff++
 	}
-
 	if diff <= maxdiff {
 		return StrSimilar
 	}
