@@ -18,8 +18,9 @@ func TestAdd(t *testing.T) {
 	r := New("/baz/bar/zot", 10)
 	r.Add("/tmp/zot/hot", time.Now())
 	r.Add("/tmp/zot", time.Now())
+	r.Add("/tmp/aaa/", time.Now())
 	// r.Add("/home/tux/Music/ogg/ogg-non-free/Sister Sin - True Sound Of The Underground", time.Now())
-	exp := 3
+	exp := 4
 	if len(r.m) != exp {
 		t.Fatalf("exp %d, got %v", exp, len(r.m))
 	}

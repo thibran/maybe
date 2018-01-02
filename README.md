@@ -1,7 +1,7 @@
 maybe
 =====
 
-version: 0.4
+version: 0.4.1
 
 jump to known folder on the command-line
 

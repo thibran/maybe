@@ -60,6 +60,11 @@ func (r *Repo) Add(path string, t time.Time) {
 	segments := strings.Split(path, osSep)
 	len := len(segments)
 	for i := 0; i < len-1; i++ {
+		// remove trailing path seperator '/' if any
+		if len > 0 && segments[len-1] == "" {
+			segments = segments[:len-1]
+			len--
+		}
 		path = strings.Join(segments[:len-i], osSep)
 		if isInIgnoreList(segments[len-1-i]) {
 			util.Logf("ignore: %s\n", path)

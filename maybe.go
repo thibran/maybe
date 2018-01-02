@@ -17,7 +17,7 @@ import (
 	"github.com/thibran/maybe/util"
 )
 
-const appVersion = "0.4"
+const appVersion = "0.4.1"
 
 func main() {
 	p := pref.Parse()
