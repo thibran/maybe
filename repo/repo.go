@@ -61,7 +61,7 @@ func (r *Repo) Add(path string, t time.Time) {
 	len := len(segments)
 	for i := 0; i < len-1; i++ {
 		// remove trailing path seperator '/' if any
-		if len > 0 && segments[len-1] == "" {
+		if path != osSep && len > 0 && segments[len-1] == "" {
 			segments = segments[:len-1]
 			len--
 		}
