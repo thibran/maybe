@@ -1,7 +1,7 @@
 maybe
 =====
 
-version: 0.4.1
+version: 0.4.2
 
 jump to known folder on the command-line
 
@@ -64,9 +64,46 @@ funcsave m
 funcsave mm
 ```
 
+Emacs
+=====
+
+``` lisp
+(defun empty-string-p (str)
+  (or (null str) (string= "" str)))
+
+(defun maybe (query)
+    (interactive "sMaybe search-query: ")
+    (let ((cmd (concat "maybe -search " query)))
+      (unless (empty-string-p query)
+	      (dired (shell-command-to-string cmd)))))
+```
+
+Eshell
+------
+
+``` lisp
+(defun maybe-list (query)
+    (unless (empty-string-p query)
+      (shell-command-to-string (concat "maybe -list " query))))
+
+(defun eshell/m (&rest q)
+  "eshell maybe-search function alias"
+  (if (null q)
+      (progn (cd "~") ())
+    (maybe (mapconcat #'symbol-or-string-to-string q " ")
+            ; open dired, don't echo result
+            (lambda (dir) (cd dir) nil))))
+
+(defun eshell/mm (&rest q)
+  "eshell maybe-list alias"
+  (unless (null q)
+    (maybe-list (mapconcat #'symbol-or-string-to-string q " "))))
+```
+
 TODO
 ====
 
+- write quiet eshell on-pwd-change elisp handler
 - write fish completion, using --show with a sub-command
    http://fishshell.com/docs/current/index.html#completion-own
    https://stackoverflow.com/questions/16657803/creating-autocomplete-script-with-sub-commands
