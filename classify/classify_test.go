@@ -18,8 +18,10 @@ func TestClassifyText(t *testing.T) {
 
 		{name: "wrong case 1", base: "Foo", query: "foo",
 			exp: StrEqualsWrongCase},
-		{name: "wrong case 2", base: "Sync", query: "Sync",
-			exp: StrEqualsWrongCase, insensitive: true},
+		{name: "wrong case 2", base: "Foo", query: "foo",
+			exp: StrEquals, insensitive: true},
+		{name: "wrong case 3", base: "Sync", query: "Sync",
+			exp: StrEquals, insensitive: true},
 
 		{name: "no match 1", base: "foo", query: "Bar", exp: NoMatch},
 		{name: "no match 2", base: "pubip", query: "book", exp: NoMatch},

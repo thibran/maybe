@@ -136,14 +136,17 @@ func classifyText(base, query string, sensitive bool) uint {
 		}
 	}
 	// equals
-	if sensitive && base == query {
+	if base == query {
 		return StrEquals
 	}
 	base = strings.ToLower(base)
 	query = strings.ToLower(query)
 	// equals wrong case
 	if base == query {
-		return StrEqualsWrongCase
+		if sensitive {
+			return StrEqualsWrongCase
+		}
+		return StrEquals
 	}
 	// starts with
 	if strings.HasPrefix(base, query) {
