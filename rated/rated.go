@@ -2,6 +2,7 @@ package rated
 
 import (
 	"fmt"
+	"os"
 	"path"
 	"path/filepath"
 	"sort"
@@ -18,6 +19,8 @@ type Rated struct {
 	*folder.Folder
 	*classify.Rating
 }
+
+const osSep = string(os.PathSeparator)
 
 // New creates a new rated folder object.
 func New(f *folder.Folder, query string) (*Rated, error) {
@@ -67,8 +70,16 @@ func (rs *Slice) FilterInPathOf(start string) {
 		// path /bar/src/foo becomes /bar/src/
 		pathStart, _ := filepath.Split(f.Path)
 		pathStart = strings.ToLower(pathStart)
-		if strings.Contains(pathStart, start) {
-			a = append(a, f)
+		for _, seg := range strings.Split(pathStart, osSep) {
+			if len(seg) == 0 {
+				continue
+			}
+			trimmed := strings.TrimSuffix(seg, start)
+			// exact match or non-suffix match
+			if len(trimmed) == 0 || strings.Contains(trimmed, start) {
+				a = append(a, f)
+				break
+			}
 		}
 	}
 	*rs = a

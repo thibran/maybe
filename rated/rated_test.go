@@ -57,6 +57,8 @@ func TestFilterInPathOf(t *testing.T) {
 		{Folder: newFolder("/bar/src/foo")},
 		{Folder: newFolder("/bar/no/foo")},
 		{Folder: newFolder("/baz/zot/foo")},
+		{Folder: newFolder("/joe/.cargo/bin")},
+		{Folder: newFolder("/joe/hugo/go/bin")},
 	}
 	tt := []struct {
 		name, start, exp string
@@ -64,9 +66,10 @@ func TestFilterInPathOf(t *testing.T) {
 	}{
 		{name: "ok 1", start: "src", exp: "/bar/src/foo", len: 1},
 		{name: "ok 2", start: "baz", exp: "/baz/zot/foo", len: 1},
-		{name: "empty", start: " ", len: 3},
+		{name: "empty", start: " ", len: 5},
 		{name: "not in path", start: "cat", len: 0},
 		{name: "search for last segment", start: "foo", len: 0},
+		{name: "ignore suffix", start: "go", exp: "/joe/hugo/go/bin", len: 1},
 	}
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
