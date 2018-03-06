@@ -25,14 +25,13 @@ const (
 	TimeLessThanSixMonths   = 9
 	TimeLessThanYear        = 6
 	TimeOlderThanAYear      = 0
-
-	StrEquals          = 200 // 160
-	StrEqualsWrongCase = 100 // 80
-	StrStartsWith      = 80  // 70
-	StrEndsWith        = 60
-	StrContains        = 40
-	StrSimilar         = 20
-	NoMatch            = 0
+	StrEquals               = 60
+	StrEqualsWrongCase      = 50
+	StrStartsWith           = 40
+	StrEndsWith             = 30
+	StrContains             = 20
+	StrSimilar              = 10
+	NoMatch                 = 0
 )
 
 // Rating of a search query

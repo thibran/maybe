@@ -57,7 +57,7 @@ func TestFilterInPathOf(t *testing.T) {
 		{Folder: newFolder("/bar/src/foo")},
 		{Folder: newFolder("/bar/no/foo")},
 		{Folder: newFolder("/baz/zot/foo")},
-		{Folder: newFolder("/joe/.cargo/bin")},
+		{Folder: newFolder("/joe/.notgo/bin")},
 		{Folder: newFolder("/joe/hugo/go/bin")},
 	}
 	tt := []struct {
