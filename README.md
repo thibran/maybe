@@ -8,15 +8,20 @@ jump to known folder on the command-line
 [![asciicast](https://asciinema.org/a/dN7G7dd4GHRiCXMS07CR8GlRg.png)](https://asciinema.org/a/dN7G7dd4GHRiCXMS07CR8GlRg)
 
 
-Tested on openSUSE Tumbleweed & Ubuntu.
+Tested on openSUSE Tumbleweed, Ubuntu and FreeBSD.
+
 
 Setup
 =====
 
+1. Compile the code with: `go build`
+2. Make the binary system wide accessible: `sudo cp maybe /usr/local/bin`
+
+
 Fish Shell
 ----------
 
-Create a fish-function with `funced m` and insert:
+Create `/etc/fish/functions/m.fish` and insert:
 
 ```
 function m
@@ -40,16 +45,8 @@ function m
 end
 ```
 
-To automatically add visited folders to `maybe`, edit
-your `~/.config/fish/config.fish`:
 
-```
-function m_on_pwd --on-variable PWD
-    maybe -add $PWD
-end
-```
-
-To list the query results without jumping to the top match:
+To list results without jumping to the top match create `/etc/fish/functions/mm.fish` and insert:
 
 ```
 function mm
@@ -57,12 +54,15 @@ function mm
 end
 ```
 
-Save both newly created fish functions with:
+
+To automatically add visited folders to `maybe`, create/edit `/etc/fish/config.fish`:
 
 ```
-funcsave m
-funcsave mm
+function m_on_pwd --on-variable PWD
+    maybe -add $PWD
+end
 ```
+
 
 Emacs
 =====
@@ -77,6 +77,7 @@ Emacs
       (unless (empty-string-p query)
 	      (dired (shell-command-to-string cmd)))))
 ```
+
 
 Eshell
 ------
@@ -99,6 +100,7 @@ Eshell
   (unless (null q)
     (maybe-list (mapconcat #'symbol-or-string-to-string q " "))))
 ```
+
 
 TODO
 ====
