@@ -6,3 +6,14 @@ debug.test
 
 # binary
 maybe
+
+# snap build directories
+parts/
+prime/
+stage/
+
+# the snap package binary
+*.snap
+
+# snapcraft state file
+snap/.snapcraft/

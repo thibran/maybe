@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 	"os/user"
 	"path/filepath"
 	"strconv"
@@ -33,7 +34,11 @@ type Pref struct {
 // Parse flags.
 func Parse() Pref {
 	homeDir := userHome()
-	dataDir := filepath.Join(homeDir, ".local/share/maybe")
+	// env is only set when run as snap
+	dataDir := os.Getenv("SNAP_USER_COMMON")
+	if dataDir == "" {
+		dataDir = filepath.Join(homeDir, ".local/share/maybe")
+	}
 
 	var p Pref
 	p.HomeDir = homeDir

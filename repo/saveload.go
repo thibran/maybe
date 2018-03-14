@@ -14,9 +14,9 @@ import (
 
 // Save repo map to dataPath.
 func (r *Repo) Save() error {
-	f, err := os.Create(r.dataPath)
+	f, err := os.Create(r.dataDir)
 	if err != nil {
-		log.Fatalf("could not save filerepo: %s %v\n", r.dataPath, err)
+		log.Fatalf("could not save filerepo: %s %v\n", r.dataDir, err)
 	}
 	defer f.Close()
 	return saveGzip(f, r.m)
@@ -47,7 +47,7 @@ func (r *Repo) Load(datadir string) {
 
 // load repo map from dataPath.
 func (r *Repo) loadFile() error {
-	f, err := os.Open(r.dataPath)
+	f, err := os.Open(r.dataDir)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return errNoFile

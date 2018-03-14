@@ -1,7 +1,7 @@
 maybe
 =====
 
-version: 0.4.2
+version: 0.5.0
 
 jump to known folder on the command-line
 
@@ -30,11 +30,30 @@ Flags
     -version
           print maybe version
 
-Setup
-=====
 
-1. Compile the code with: `go build`
-2. Make the binary system wide accessible: `sudo cp maybe /usr/local/bin`
+Install
+=======
+
+Snap Package
+------------
+
+The easiest way to install Maybe is to get the [snap](https://docs.snapcraft.io/core/install) package:
+
+    sudo snap install maybe
+
+
+Alternative, compile from source
+--------------------------------
+
+1. Compile the code with:
+
+    git clone https://github.com/thibran/maybe.git
+    cd maybe
+    go build
+
+2. Make the binary system wide accessible:
+
+    sudo cp maybe /usr/local/bin
 
 
 Fish Shell

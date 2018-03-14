@@ -28,7 +28,7 @@ var (
 // Repo content is saved to the disk.
 type Repo struct {
 	m          rated.Map
-	dataPath   string
+	dataDir    string
 	maxEntries int
 }
 
@@ -36,7 +36,7 @@ type Repo struct {
 func New(path string, maxEntries int) *Repo {
 	return &Repo{
 		m:          make(rated.Map),
-		dataPath:   path,
+		dataDir:    path,
 		maxEntries: maxEntries,
 	}
 }
