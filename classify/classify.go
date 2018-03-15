@@ -6,8 +6,6 @@ import (
 	"strings"
 	"time"
 	"unicode/utf8"
-
-	"github.com/thibran/maybe/pref"
 )
 
 const (
@@ -25,8 +23,7 @@ const (
 	TimeLessThanSixMonths   = 9
 	TimeLessThanYear        = 6
 	TimeOlderThanAYear      = 0
-	StrEquals               = 60
-	StrEqualsWrongCase      = 50
+	StrEquals               = 50
 	StrStartsWith           = 40
 	StrEndsWith             = 30
 	StrContains             = 20
@@ -49,7 +46,7 @@ func (r *Rating) Points() uint {
 // NewRating rates search-term s for path p within time-slice a.
 func NewRating(s, p string, a ...time.Time) (*Rating, error) {
 	base := path.Base(p)
-	n := classifyText(base, s, pref.CaseSensitive)
+	n := classifyText(base, s)
 	if n == NoMatch {
 		return nil, fmt.Errorf("NewRating - similarity: noMatch")
 	}
@@ -126,25 +123,17 @@ func timeHelper(now, t time.Time) uint {
 }
 
 // classifyText compares base to the query sting.
-// If the case is determined is set using the sensitive bool.
-func classifyText(base, query string, sensitive bool) uint {
+func classifyText(base, query string) uint {
 	// remove leading dot from base if not found in query
 	if r := []rune(query); len(r) > 0 && r[0] != '.' {
 		if r := []rune(base); len(r) > 0 && r[0] == '.' {
 			base = strings.Replace(base, ".", "", 1)
 		}
 	}
-	// equals
-	if base == query {
-		return StrEquals
-	}
 	base = strings.ToLower(base)
 	query = strings.ToLower(query)
-	// equals wrong case
+	// equals
 	if base == query {
-		if sensitive {
-			return StrEqualsWrongCase
-		}
 		return StrEquals
 	}
 	// starts with

@@ -14,8 +14,7 @@ import (
 
 // Verbose output
 var (
-	Verbose       = false
-	CaseSensitive = true
+	Verbose = false
 )
 
 const (
@@ -46,13 +45,11 @@ func Parse() Pref {
 	flag.BoolVar(&p.Version, "version", false, "print maybe version")
 	flagMaxentriesVar(&p.MaxEntries, "max-entries", maxEntries, "maximum unique path-entries")
 	verb := flag.Bool("v", false, "verbose")
-	insensitive := flag.Bool("insensitive", true, "case insensitive search")
 	flag.Parse()
 
 	p.Search = queryFrom(*q)
 	p.List = queryFrom(*l)
 	Verbose = *verb
-	CaseSensitive = !*insensitive
 	return p
 }
 

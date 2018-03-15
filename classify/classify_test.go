@@ -17,10 +17,8 @@ func TestClassifyText(t *testing.T) {
 		{name: "equals 3", base: ".foo", query: "foo", exp: StrEquals},
 
 		{name: "wrong case 1", base: "Foo", query: "foo",
-			exp: StrEqualsWrongCase},
-		{name: "wrong case 2", base: "Foo", query: "foo",
 			exp: StrEquals, insensitive: true},
-		{name: "wrong case 3", base: "Sync", query: "Sync",
+		{name: "wrong case 2", base: "Sync", query: "Sync",
 			exp: StrEquals, insensitive: true},
 
 		{name: "no match 1", base: "foo", query: "Bar", exp: NoMatch},
@@ -36,7 +34,7 @@ func TestClassifyText(t *testing.T) {
 
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			n := classifyText(tc.base, tc.query, !tc.insensitive)
+			n := classifyText(tc.base, tc.query)
 			if n != tc.exp {
 				t.Errorf("%s - exp %v, got %v", tc.name, tc.exp, n)
 			}
