@@ -9,19 +9,19 @@ import (
 )
 
 const (
-	TimeLessThanMinute      = 42
-	TimeLessThanFiveMinutes = 39
-	TimeLessThanHour        = 36
-	TimeLessThanSixHours    = 33
-	TimeLessThanTwelveHours = 30
-	TimeLessThanDay         = 27
-	TimeLessThanTwoDays     = 24
-	TimeLessThanWeek        = 21
-	TimeLessThanTwoWeeks    = 18
-	TimeLessThanMonth       = 15
-	TimeLessThanTwoMonths   = 12
-	TimeLessThanSixMonths   = 9
-	TimeLessThanYear        = 6
+	TimeLessThanMinute      = 39
+	TimeLessThanFiveMinutes = 36
+	TimeLessThanHour        = 33
+	TimeLessThanSixHours    = 30
+	TimeLessThanTwelveHours = 27
+	TimeLessThanDay         = 24
+	TimeLessThanTwoDays     = 21
+	TimeLessThanWeek        = 18
+	TimeLessThanTwoWeeks    = 15
+	TimeLessThanMonth       = 12
+	TimeLessThanTwoMonths   = 9
+	TimeLessThanSixMonths   = 6
+	TimeLessThanYear        = 3
 	TimeOlderThanAYear      = 0
 	StrEquals               = 50
 	StrStartsWith           = 40

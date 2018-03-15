@@ -11,6 +11,25 @@ jump to known folder on the command-line
 Tested on openSUSE Tumbleweed, Ubuntu and FreeBSD.
 
 
+Flags
+-----
+
+    -init
+          scan $HOME and add folders (six folder-level deep)
+    -list string
+          list results for keyword
+    -datadir string
+          (default $HOME/.local/share/maybe)
+    -max-entries int
+          maximum unique path-entries (default 10000)
+    -add string
+          add path to index
+    -search string
+          search for keyword
+    -v    verbose
+    -version
+          print maybe version
+
 Setup
 =====
 
