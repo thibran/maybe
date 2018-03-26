@@ -109,11 +109,25 @@ Emacs
 (defun empty-string-p (str)
   (or (null str) (string= "" str)))
 
-(defun maybe (query)
-    (interactive "sMaybe search-query: ")
-    (let ((cmd (concat "maybe -search " query)))
-      (unless (empty-string-p query)
-	      (dired (shell-command-to-string cmd)))))
+(cl-defun maybe (query &optional (fn #'dired) )
+  (interactive "sMaybe search-query: ")
+  (let ((dir
+          (shell-command-to-string
+            (format "maybe -search %s" query))))
+    (unless (empty-string-p query)
+      (funcall fn dir))))
+
+(defun maybe-list (query)
+  "list results for query"
+  (unless (empty-string-p query)
+    (shell-command-to-string (format "maybe -list %s" query))))
+
+(defun maybe-add-current-folder ()
+  "add current folder to the maybe dataset"
+  (let ((inhibit-message t) ; silence echo area output
+	(dir (string-remove-prefix "Directory " (pwd))))
+    (shell-command
+     (format "maybe -add %s" dir))))
 ```
 
 
@@ -121,17 +135,14 @@ Eshell
 ------
 
 ``` lisp
-(defun maybe-list (query)
-    (unless (empty-string-p query)
-      (shell-command-to-string (concat "maybe -list " query))))
+(add-hook 'eshell-directory-change-hook #'maybe-add-current-folder)
 
 (defun eshell/m (&rest q)
   "eshell maybe-search function alias"
   (if (null q)
       (progn (cd "~") ())
     (maybe (mapconcat #'symbol-or-string-to-string q " ")
-            ; open dired, don't echo result
-            (lambda (dir) (cd dir) nil))))
+           (lambda (dir) (cd dir) nil))))
 
 (defun eshell/mm (&rest q)
   "eshell maybe-list alias"
@@ -143,7 +154,6 @@ Eshell
 TODO
 ====
 
-- write quiet eshell on-pwd-change elisp handler
 - write fish completion, using --show with a sub-command
    http://fishshell.com/docs/current/index.html#completion-own
    https://stackoverflow.com/questions/16657803/creating-autocomplete-script-with-sub-commands
