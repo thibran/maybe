@@ -170,7 +170,7 @@ Eshell
 ``` lisp
 (add-hook 'eshell-directory-change-hook #'maybe-add-current-folder)
 
-(defun eshell/m (a &optional b)
+(defun eshell/m (&optional a b)
   "eshell maybe-search function alias"
   (if (null a)
       (progn (cd "~") ())
