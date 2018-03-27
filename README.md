@@ -37,7 +37,7 @@ Install
 Snap Package
 ------------
 
-The easiest way to install Maybe is to get the [snap](https://docs.snapcraft.io/core/install) package:
+The easiest way to install `maybe` is to get the [snap package](https://docs.snapcraft.io/core/install):
 
     sudo snap install maybe
 
@@ -45,19 +45,49 @@ The easiest way to install Maybe is to get the [snap](https://docs.snapcraft.io/
 Alternative, compile from source
 --------------------------------
 
-1. Compile the code with:
+To compile the code and make `maybe` system wide accessible:
 
-    git clone https://github.com/thibran/maybe.git
-    cd maybe
-    go build
+    go install github.com/thibran/maybe  
+    sudo cp $GOPATH/bin/maybe /usr/local/bin
 
-2. Make the binary system wide accessible:
 
-    sudo cp maybe /usr/local/bin
+Bash
+====
+
+Add to your `~/.bashrc`:
+
+``` bash
+function m() {
+    if [[ -z $1 ]]; then
+        if [[ $PWD != $HOME ]]; then
+            cd $HOME
+        fi
+        return $?
+    fi
+    d=$(maybe --search $@)
+    if [[ $? == 0 ]]; then
+        if [[ $d != $PWD ]]; then
+            cd $d
+        fi
+    else
+        return 2
+    fi
+}
+
+function mm() {
+    maybe -list $@
+}
+
+function cd()
+{
+    builtin cd $@
+    maybe -add $PWD
+}
+```
 
 
 Fish Shell
-----------
+==========
 
 Create `/etc/fish/functions/m.fish` and insert:
 
@@ -109,23 +139,26 @@ Emacs
 (defun empty-string-p (str)
   (or (null str) (string= "" str)))
 
-(cl-defun maybe (query &optional (fn #'dired) )
+(cl-defun maybe (a &optional b &key (fn #'dired))
   (interactive "sMaybe search-query: ")
-  (let ((dir
-          (shell-command-to-string
-            (format "maybe -search %s" query))))
-    (unless (empty-string-p query)
-      (funcall fn dir))))
+  (unless (empty-string-p a)
+    (let ((dir
+           (shell-command-to-string
+            (format "maybe -search %s"
+                    (mapconcat 'identity (list a b) " ")))))
+      (unless (empty-string-p dir)
+        (funcall fn dir)))))
 
-(defun maybe-list (query)
-  "list results for query"
-  (unless (empty-string-p query)
-    (shell-command-to-string (format "maybe -list %s" query))))
+(defun maybe-list (a &optional b)
+  (unless (empty-string-p a)
+    (shell-command-to-string
+     (format "maybe -list %s"
+             (mapconcat 'identity (list a b) " ")))))
 
 (defun maybe-add-current-folder ()
   "add current folder to the maybe dataset"
-  (let ((inhibit-message t) ; silence echo area output
-	(dir (string-remove-prefix "Directory " (pwd))))
+  (let ((inhibit-message t)             ; silence echo area output
+        (dir (string-remove-prefix "Directory " (pwd))))
     (shell-command
      (format "maybe -add %s" dir))))
 ```
@@ -137,17 +170,19 @@ Eshell
 ``` lisp
 (add-hook 'eshell-directory-change-hook #'maybe-add-current-folder)
 
-(defun eshell/m (&rest q)
+(defun eshell/m (a &optional b)
   "eshell maybe-search function alias"
-  (if (null q)
+  (if (null a)
       (progn (cd "~") ())
-    (maybe (mapconcat #'symbol-or-string-to-string q " ")
-           (lambda (dir) (cd dir) nil))))
+    (maybe (symbol-or-string-to-string a)
+           (unless (null b) (symbol-or-string-to-string b))
+           :fn (lambda (dir) (cd dir) nil))))
 
-(defun eshell/mm (&rest q)
+(defun eshell/mm (a &optional b)
   "eshell maybe-list alias"
-  (unless (null q)
-    (maybe-list (mapconcat #'symbol-or-string-to-string q " "))))
+  (unless (null a)
+    (maybe-list (symbol-or-string-to-string a)
+                (unless (null b) (symbol-or-string-to-string b)))))
 ```
 
 

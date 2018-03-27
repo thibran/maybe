@@ -2,7 +2,7 @@ name: maybe
 version: '0.5.0'
 summary: jump to known folder on the command-line
 description: |
-  Shell configuration (fish shell, eshell) & how-to:
+  Shell configuration (bash, fish, eshell) & how-to:
     github.com/thibran/maybe
 grade:       stable
 confinement: strict
