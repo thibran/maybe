@@ -19,6 +19,10 @@ import (
 
 const appVersion = "0.5.0"
 
+// TODO
+// for some reason it is not possible to add the 'functions' dir:
+//   /home/tux/.dotfiles/fish/.config/fish/functions
+
 func main() {
 	p := pref.Parse()
 	r := repo.New(filepath.Join(p.DataDir, "maybe.data"), p.MaxEntries)

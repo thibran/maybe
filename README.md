@@ -139,6 +139,8 @@ Emacs
 (defun empty-string-p (str)
   (or (null str) (string= "" str)))
 
+(global-set-key (kbd "M-m") #'maybe)
+
 (cl-defun maybe (a &optional b &key (fn #'dired))
   (interactive "sMaybe search-query: ")
   (unless (empty-string-p a)
@@ -170,25 +172,32 @@ Eshell
 ``` lisp
 (add-hook 'eshell-directory-change-hook #'maybe-add-current-folder)
 
+(defun symbol-or-string-to-string (s)
+  (cl-typecase s
+    (string s)
+    (symbol (symbol-name s))
+    (t (error "Expect string or symbol."))))
+
 (defun eshell/m (&optional a b)
   "eshell maybe-search function alias"
   (if (null a)
       (progn (cd "~") ())
-    (maybe (symbol-or-string-to-string a)
-           (unless (null b) (symbol-or-string-to-string b))
-           :fn (lambda (dir) (cd dir) nil))))
+    (apply #'maybe
+           (symbol-or-string-to-string a)
+           (and b (symbol-or-string-to-string b))
+           '(:fn (lambda (dir) (cd dir) nil)))))
 
 (defun eshell/mm (a &optional b)
   "eshell maybe-list alias"
-  (unless (null a)
-    (maybe-list (symbol-or-string-to-string a)
-                (unless (null b) (symbol-or-string-to-string b)))))
+  (and a (maybe-list (symbol-or-string-to-string a)
+                     (and b (symbol-or-string-to-string b)))))
 ```
 
 
 TODO
 ====
 
+- write Eshel completion
 - write fish completion, using --show with a sub-command
    http://fishshell.com/docs/current/index.html#completion-own
    https://stackoverflow.com/questions/16657803/creating-autocomplete-script-with-sub-commands
