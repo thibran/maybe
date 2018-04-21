@@ -136,6 +136,9 @@ Emacs
 =====
 
 ``` lisp
+;; in case you changed your default shell, add:
+(setf shell-file-name "/bin/bash")
+
 (defun empty-string-p (str)
   (or (null str) (string= "" str)))
 
@@ -170,9 +173,6 @@ Eshell
 ------
 
 ``` lisp
-;; in case you changed your default shell, add:
-(setf shell-file-name "/bin/bash")
-
 (add-hook 'eshell-directory-change-hook #'maybe-add-current-folder)
 
 (defun symbol-or-string-to-string (s)
