@@ -197,6 +197,13 @@ Eshell
 TODO
 ====
 
+- do performance analyses
+  * find hot-paths
+  * check threading
+  * check allocations
+  * find average size of most used data-structures
+  * maybe initilize slices with average size
+  * maybe use some memory-pools
 - write Eshel completion
 - write fish completion, using --show with a sub-command
    http://fishshell.com/docs/current/index.html#completion-own
