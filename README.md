@@ -39,7 +39,8 @@ Snap Package
 
 The easiest way to install `maybe` is to get the [snap package](https://docs.snapcraft.io/core/install):
 
-    sudo snap install maybe
+    sudo snap install maybe-thibran
+    sudo snap alias maybe-thibran.maybe maybe
 
 
 Alternative, compile from source
@@ -118,7 +119,7 @@ To list results without jumping to the top match create `/etc/fish/functions/mm.
 
 ```
 function mm
-        maybe -list $argv
+    maybe -list $argv
 end
 ```
 
@@ -200,6 +201,9 @@ Eshell
 TODO
 ====
 
+- for some reason it is not possible to add the 'functions' dir:
+    /home/foo/.dotfiles/fish/.config/fish/functions
+- ignore TRAMP paths, e.g. starting with: /ssh:name@192
 - do performance analyses
   * find hot-paths
   * check threading
@@ -208,6 +212,7 @@ TODO
   * maybe initilize slices with average size
   * maybe use some memory-pools
 - write Eshel completion
+  https://sixty-north.com/blog/writing-the-simplest-emacs-company-mode-backend.html
 - write fish completion, using --show with a sub-command
    http://fishshell.com/docs/current/index.html#completion-own
    https://stackoverflow.com/questions/16657803/creating-autocomplete-script-with-sub-commands
