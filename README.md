@@ -137,6 +137,8 @@ Emacs
 =====
 
 ``` lisp
+(require 'subr-x) ; string-remove-suffix
+
 ;; in case you changed your default shell, add:
 (setf shell-file-name "/bin/bash")
 
