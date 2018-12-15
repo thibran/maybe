@@ -34,18 +34,6 @@ Flags
 Install
 =======
 
-Snap Package
-------------
-
-The easiest way to install `maybe` is to get the [snap package](https://docs.snapcraft.io/core/install):
-
-    sudo snap install maybe-thibran
-    sudo snap alias maybe-thibran.maybe maybe
-
-
-Alternative, compile from source
---------------------------------
-
 To compile the code and make `maybe` system wide accessible:
 
     go install github.com/thibran/maybe  
